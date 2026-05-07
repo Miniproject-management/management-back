@@ -34,10 +34,23 @@ CREATE TABLE leave_type (
     leave_type VARCHAR(50) NOT NULL,
     leave_days DECIMAL(5,2) NOT NULL,
     accrual_rule VARCHAR(255) NOT NULL,
+
+    -- 결재 상태
+    -- PENDING  : 승인 대기
+    -- APPROVED : 승인 완료
+    -- REJECTED : 반려
+    leave_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+
     is_active CHAR(1) NOT NULL DEFAULT 'Y',
 
     PRIMARY KEY (leave_id)
 ) ENGINE=InnoDB;
+
+
+ALTER TABLE leave_type
+ADD CONSTRAINT FK_leave_employee
+FOREIGN KEY (emp_no)
+REFERENCES employees(emp_no);
 
 
 -- FK 설정
