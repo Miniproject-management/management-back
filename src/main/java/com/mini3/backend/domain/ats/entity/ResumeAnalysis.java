@@ -16,37 +16,37 @@ import java.time.LocalDateTime;
 @Builder
 public class ResumeAnalysis {
 
-    @Id
+    @Id // PK 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "analysis_id")
+    @Column(name = "analysis_id") // 이력서 분석 ID
     private Long analysisId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resume_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY) // 여러 개의 ResumeAnalysis가 하나의 Resume 에 속함.
+    @JoinColumn(name = "resume_id", nullable = false) // Resume ID
     private Resume resume;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // DB에는 숫자가 아니라 문자열로
     @Column(name = "status", nullable = false, length = 20)
     private AnalysisStatus status;
 
-    @Column(name = "model", length = 100)
+    @Column(name = "model", length = 100) // 모델 이름
     private String model;
 
-    @Lob
-    @Column(name = "summary", columnDefinition = "TEXT")
+    @Lob // Large Object
+    @Column(name = "summary", columnDefinition = "TEXT") // 요약
     private String summary;
 
-    @Lob
-    @Column(name = "result_json", columnDefinition = "TEXT")
+    @Lob // Large Object
+    @Column(name = "result_json", columnDefinition = "TEXT") // 결과 JSON
     private String resultJson;
 
-    @Column(name = "failure_message", length = 2000)
+    @Column(name = "failure_message", length = 2000) // 실패 메시지
     private String failureMessage;
 
-    @Column(name = "analyzed_at")
+    @Column(name = "analyzed_at") // 분석 일시
     private LocalDateTime analyzedAt;
 
-    @PrePersist
+    @PrePersist // 엔티티가 DB에 INSERT 되기 전에 호출
     void prePersist() {
         if (this.status == null) {
             this.status = AnalysisStatus.PENDING;
