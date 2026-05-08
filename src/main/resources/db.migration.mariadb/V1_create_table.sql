@@ -55,6 +55,18 @@ CREATE TABLE leave_requests (
 
 
 
+-- 연차 잔여량
+CREATE TABLE leave_balances (
+    balance_id BIGINT NOT NULL AUTO_INCREMENT,
+    emp_no BIGINT NOT NULL,
+    year INT NOT NULL,
+    total_leave DECIMAL(5,2) NOT NULL DEFAULT 15.00,
+    used_leave DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+
+    PRIMARY KEY (balance_id)
+) ENGINE=InnoDB;
+
+
 -- FK 설정
 ALTER TABLE employees
 ADD CONSTRAINT FK_employees_department
@@ -71,3 +83,22 @@ ALTER TABLE leave_requests
 ADD CONSTRAINT FK_leave_approver
 FOREIGN KEY (approved_by)
 REFERENCES employees(emp_no);
+
+ALTER TABLE leave_balances
+ADD CONSTRAINT FK_balance_employee
+FOREIGN KEY (emp_no)
+REFERENCES employees(emp_no);
+
+
+-- 감사 로그
+CREATE TABLE audit_logs (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    action VARCHAR(50) NOT NULL,
+    emp_no BIGINT,
+    target_id BIGINT,
+    detail VARCHAR(500),
+    ip_address VARCHAR(45),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+) ENGINE=InnoDB;
