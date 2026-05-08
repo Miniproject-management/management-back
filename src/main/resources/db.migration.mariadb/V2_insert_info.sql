@@ -39,6 +39,15 @@ INSERT INTO leave_requests (
     is_active
 ) VALUES
 
+-- =========================
+-- 연차 잔여량 샘플 데이터
+-- =========================
+INSERT INTO leave_balances (emp_no, year, total_leave, used_leave) VALUES
+(1, 2026, 15.00, 3.50),
+(2, 2026, 15.00, 1.00),
+(3, 2026, 15.00, 2.00);
+
+
 -- 팀장 승인 대기
 (
     1,
