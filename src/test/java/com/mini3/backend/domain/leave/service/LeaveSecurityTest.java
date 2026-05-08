@@ -2,6 +2,7 @@ package com.mini3.backend.domain.leave.service;
 
 import com.mini3.backend.domain.department.entity.Department;
 import com.mini3.backend.domain.employee.entity.Employee;
+import com.mini3.backend.domain.employee.enums.Position;
 import com.mini3.backend.domain.employee.repository.EmployeeRepository;
 import com.mini3.backend.domain.leave.dto.LeaveRequestDto;
 import com.mini3.backend.domain.leave.entity.LeaveBalance;
@@ -50,17 +51,33 @@ class LeaveSecurityTest {
 
     @BeforeEach
     void setUp() {
-        Department dept = Department.builder().deptNo(1L).deptName("개발팀").build();
+
+        Department dept = Department.builder()
+                .deptNo(1L)
+                .deptName("개발팀")
+                .build();
 
         employee = Employee.builder()
-                .empNo(1L).empName("루키즈").department(dept).position("사원").build();
+                .empNo(1L)
+                .empName("루키즈")
+                .department(dept)
+                .position(Position.사원)
+                .build();
 
         attacker = Employee.builder()
-                .empNo(999L).empName("해커").department(dept).position("사원").build();
+                .empNo(999L)
+                .empName("해커")
+                .department(dept)
+                .position(Position.사원)
+                .build();
 
         balance = LeaveBalance.builder()
-                .balanceId(1L).employee(employee).year(2026)
-                .totalLeave(new BigDecimal("15.00")).usedLeave(new BigDecimal("3.00")).build();
+                .balanceId(1L)
+                .employee(employee)
+                .year(2026)
+                .totalLeave(new BigDecimal("15.00"))
+                .usedLeave(new BigDecimal("3.00"))
+                .build();
     }
 
     @Nested
@@ -70,7 +87,9 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("reason에 <script> 태그 삽입 시 이스케이프 처리")
         void xss_scriptTag() {
+
             LeaveRequestDto dto = new LeaveRequestDto();
+
             dto.setEmpNo(1L);
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
@@ -78,10 +97,17 @@ class LeaveSecurityTest {
             dto.setRequestDays(1);
             dto.setReason("<script>alert('해킹')</script>");
 
-            given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026)).willReturn(Optional.of(balance));
-            given(leaveRequestRepository.findOverlapping(eq(1L), any(), any())).willReturn(Collections.emptyList());
-            given(leaveRequestRepository.save(any(LeaveRequest.class))).willAnswer(i -> i.getArgument(0));
+            given(employeeRepository.findById(1L))
+                    .willReturn(Optional.of(employee));
+
+            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026))
+                    .willReturn(Optional.of(balance));
+
+            given(leaveRequestRepository.findOverlapping(eq(1L), any(), any()))
+                    .willReturn(Collections.emptyList());
+
+            given(leaveRequestRepository.save(any(LeaveRequest.class)))
+                    .willAnswer(i -> i.getArgument(0));
 
             LeaveRequest result = leaveService.applyLeave(dto);
 
@@ -92,7 +118,9 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("reason에 HTML 태그 삽입 시 이스케이프 처리")
         void xss_htmlTag() {
+
             LeaveRequestDto dto = new LeaveRequestDto();
+
             dto.setEmpNo(1L);
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 2));
@@ -100,10 +128,17 @@ class LeaveSecurityTest {
             dto.setRequestDays(1);
             dto.setReason("<img src=x onerror=alert('hack')>");
 
-            given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026)).willReturn(Optional.of(balance));
-            given(leaveRequestRepository.findOverlapping(eq(1L), any(), any())).willReturn(Collections.emptyList());
-            given(leaveRequestRepository.save(any(LeaveRequest.class))).willAnswer(i -> i.getArgument(0));
+            given(employeeRepository.findById(1L))
+                    .willReturn(Optional.of(employee));
+
+            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026))
+                    .willReturn(Optional.of(balance));
+
+            given(leaveRequestRepository.findOverlapping(eq(1L), any(), any()))
+                    .willReturn(Collections.emptyList());
+
+            given(leaveRequestRepository.save(any(LeaveRequest.class)))
+                    .willAnswer(i -> i.getArgument(0));
 
             LeaveRequest result = leaveService.applyLeave(dto);
 
@@ -118,11 +153,15 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("다른 사원의 휴가를 취소하려고 시도 → 차단")
         void cancel_otherPersonLeave() {
-            LeaveRequest request = LeaveRequest.builder()
-                    .leaveId(1L).employee(employee)
-                    .leaveStatus(LeaveStatus.PENDING_MANAGER).build();
 
-            given(leaveRequestRepository.findById(1L)).willReturn(Optional.of(request));
+            LeaveRequest request = LeaveRequest.builder()
+                    .leaveId(1L)
+                    .employee(employee)
+                    .leaveStatus(LeaveStatus.PENDING_MANAGER)
+                    .build();
+
+            given(leaveRequestRepository.findById(1L))
+                    .willReturn(Optional.of(request));
 
             assertThatThrownBy(() -> leaveService.cancel(1L, 999L))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -132,11 +171,15 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("이미 승인된 휴가를 취소하려고 시도 → 차단")
         void cancel_approvedLeave() {
-            LeaveRequest request = LeaveRequest.builder()
-                    .leaveId(1L).employee(employee)
-                    .leaveStatus(LeaveStatus.APPROVED).build();
 
-            given(leaveRequestRepository.findById(1L)).willReturn(Optional.of(request));
+            LeaveRequest request = LeaveRequest.builder()
+                    .leaveId(1L)
+                    .employee(employee)
+                    .leaveStatus(LeaveStatus.APPROVED)
+                    .build();
+
+            given(leaveRequestRepository.findById(1L))
+                    .willReturn(Optional.of(request));
 
             assertThatThrownBy(() -> leaveService.cancel(1L, 1L))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -146,12 +189,18 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("이미 승인 완료된 휴가를 다시 승인하려고 시도 → 차단")
         void approve_alreadyApproved() {
-            LeaveRequest request = LeaveRequest.builder()
-                    .leaveId(1L).employee(employee)
-                    .leaveStatus(LeaveStatus.APPROVED).build();
 
-            given(leaveRequestRepository.findById(1L)).willReturn(Optional.of(request));
-            given(employeeRepository.findById(2L)).willReturn(Optional.of(attacker));
+            LeaveRequest request = LeaveRequest.builder()
+                    .leaveId(1L)
+                    .employee(employee)
+                    .leaveStatus(LeaveStatus.APPROVED)
+                    .build();
+
+            given(leaveRequestRepository.findById(1L))
+                    .willReturn(Optional.of(request));
+
+            given(employeeRepository.findById(2L))
+                    .willReturn(Optional.of(attacker));
 
             assertThatThrownBy(() -> leaveService.approve(1L, 2L))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -166,7 +215,9 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("종료일이 시작일보다 앞선 경우 → 차단")
         void endDate_beforeStartDate() {
+
             LeaveRequestDto dto = new LeaveRequestDto();
+
             dto.setEmpNo(1L);
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 10));
@@ -174,7 +225,8 @@ class LeaveSecurityTest {
             dto.setRequestDays(1);
             dto.setReason("테스트");
 
-            given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+            given(employeeRepository.findById(1L))
+                    .willReturn(Optional.of(employee));
 
             assertThatThrownBy(() -> leaveService.applyLeave(dto))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -184,7 +236,9 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("30일 초과 연차 신청 → 차단")
         void over30Days() {
+
             LeaveRequestDto dto = new LeaveRequestDto();
+
             dto.setEmpNo(1L);
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
@@ -192,7 +246,8 @@ class LeaveSecurityTest {
             dto.setRequestDays(30);
             dto.setReason("장기 휴가");
 
-            given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+            given(employeeRepository.findById(1L))
+                    .willReturn(Optional.of(employee));
 
             assertThatThrownBy(() -> leaveService.applyLeave(dto))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -202,9 +257,11 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("연차 부족한데 신청 → 차단")
         void insufficientBalance() {
+
             balance.setUsedLeave(new BigDecimal("14.50"));
 
             LeaveRequestDto dto = new LeaveRequestDto();
+
             dto.setEmpNo(1L);
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
@@ -212,8 +269,11 @@ class LeaveSecurityTest {
             dto.setRequestDays(2);
             dto.setReason("여행");
 
-            given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026)).willReturn(Optional.of(balance));
+            given(employeeRepository.findById(1L))
+                    .willReturn(Optional.of(employee));
+
+            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026))
+                    .willReturn(Optional.of(balance));
 
             assertThatThrownBy(() -> leaveService.applyLeave(dto))
                     .isInstanceOf(InsufficientLeaveException.class)
@@ -223,14 +283,17 @@ class LeaveSecurityTest {
         @Test
         @DisplayName("존재하지 않는 사원으로 신청 → 차단")
         void nonExistentEmployee() {
+
             LeaveRequestDto dto = new LeaveRequestDto();
+
             dto.setEmpNo(9999L);
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
             dto.setEndDate(LocalDate.of(2026, 7, 1));
             dto.setRequestDays(1);
 
-            given(employeeRepository.findById(9999L)).willReturn(Optional.empty());
+            given(employeeRepository.findById(9999L))
+                    .willReturn(Optional.empty());
 
             assertThatThrownBy(() -> leaveService.applyLeave(dto))
                     .isInstanceOf(IllegalArgumentException.class)

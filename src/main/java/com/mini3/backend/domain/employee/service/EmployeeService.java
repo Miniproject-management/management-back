@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.mini3.backend.domain.employee.enums.Position;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public class EmployeeService {
                 .empName(request.getEmpName())
                 .department(department)
                 .jobTitle(request.getJobTitle())
-                .position(request.getPosition())
+                .position(Position.valueOf(request.getPosition()))
                 .hireDate(request.getHireDate())
                 .password(request.getPassword()) // 추후 최혜인님 담당 PasswordEncoder 연동 필요
                 .build();
@@ -79,7 +80,7 @@ public class EmployeeService {
         employee.setEmpName(request.getEmpName());
         employee.setDepartment(department);
         employee.setJobTitle(request.getJobTitle());
-        employee.setPosition(request.getPosition());
+        employee.setPosition(Position.valueOf(request.getPosition()));
         
         return EmployeeResponse.from(employee);
     }
