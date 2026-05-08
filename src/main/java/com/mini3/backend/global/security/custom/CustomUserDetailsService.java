@@ -32,11 +32,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     private Role getRole(Employee employee) {
 
         // 인사팀이면 무조건 관리자
-        if (employee.getDepartment().getDeptName().equals("인사팀")) {
+        // if (employee.getDepartment().getDeptName().equals("인사팀")) {
+        //     return Role.ROLE_ADMIN;
+        // }
+        if (employee.getPosition() == Position.관리자) {
             return Role.ROLE_ADMIN;
         }
 
-        // 일반 부서 팀장
+        // 일반 부서 팀장ㅇ
         if (employee.getPosition() == Position.팀장) {
             return Role.ROLE_MANAGER;
         }
