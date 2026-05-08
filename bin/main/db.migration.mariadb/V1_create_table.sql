@@ -1,73 +1,156 @@
-DROP TABLE IF EXISTS leave_requests;
-DROP TABLE IF EXISTS employees;
-DROP TABLE IF EXISTS departments;
+-- =========================
+-- 기존 데이터 삭제
+-- =========================
+
+DELETE FROM leave_requests;
+DELETE FROM employees;
+DELETE FROM departments;
 
 
--- 부서정보
-CREATE TABLE departments (
-    dept_no BIGINT NOT NULL AUTO_INCREMENT,
-    dept_name VARCHAR(100) NOT NULL,
-    dept_desc VARCHAR(255),
-
-    PRIMARY KEY (dept_no)
-) ENGINE=InnoDB;
+-- AUTO_INCREMENT 초기화
+ALTER TABLE departments AUTO_INCREMENT = 1;
+ALTER TABLE employees AUTO_INCREMENT = 1;
+ALTER TABLE leave_requests AUTO_INCREMENT = 1;
 
 
--- 인사정보
-CREATE TABLE employees (
-    emp_no BIGINT NOT NULL AUTO_INCREMENT,
-    emp_name VARCHAR(100) NOT NULL,
-    dept_no BIGINT NOT NULL,
-    job_title VARCHAR(100) NOT NULL,
-    position VARCHAR(50) NOT NULL,
-    hire_date DATE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+-- =========================
+-- 부서 데이터
+-- =========================
 
-    PRIMARY KEY (emp_no)
-) ENGINE=InnoDB;
+INSERT INTO departments (
+    dept_name,
+    dept_desc
+) VALUES
 
-
--- 연차정보
-CREATE TABLE leave_requests (
-    leave_id BIGINT NOT NULL AUTO_INCREMENT,
-    emp_no BIGINT NOT NULL,
-    leave_type VARCHAR(50) NOT NULL,
-    leave_days DECIMAL(5,2) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    reason TEXT,
-    accrual_rule VARCHAR(255) NOT NULL,
-
-     -- 결재 상태
-        -- PENDING_MANAGER : 팀장 승인 대기
-        -- PENDING_HR      : 인사팀 승인 대기
-        -- APPROVED        : 최종 승인
-        -- REJECTED        : 반려
-        -- CANCELED        : 신청 취소
-    leave_status VARCHAR(30) NOT NULL DEFAULT 'PENDING_MANAGER',
-    -- 마지막 승인자
-        approved_by BIGINT,
-
-    is_active CHAR(1) NOT NULL DEFAULT 'Y',
-
-    PRIMARY KEY (leave_id)
-) ENGINE=InnoDB;
+('인사팀', '인사 및 조직 관리'),
+('개발팀', '서비스 개발 및 운영'),
+('디자인팀', 'UI/UX 디자인');
 
 
+-- =========================
+-- 직원 데이터
+-- =========================
 
--- FK 설정
-ALTER TABLE employees
-ADD CONSTRAINT FK_employees_department
-FOREIGN KEY (dept_no)
-REFERENCES departments(dept_no);
+INSERT INTO employees (
+    emp_name,
+    dept_no,
+    job_title,
+    position,
+    hire_date,
+    password
+) VALUES
+
+-- 일반 사원
+(
+    '루키즈',
+    2,
+    'Backend Developer',
+    '사원',
+    '2024-01-02',
+    'password123'
+),
+
+-- 개발팀 팀장
+(
+    '김팀장',
+    2,
+    'Development Team Leader',
+    '팀장',
+    '2023-05-15',
+    'password123'
+),
+
+-- 인사팀 관리자
+(
+    '박인사',
+    1,
+    'HR Manager',
+    '팀장',
+    '2022-03-01',
+    'password123'
+),
+
+-- 디자인팀 사원
+(
+    '최디자인',
+    3,
+    'UI Designer',
+    '사원',
+    '2024-07-01',
+    'password123'
+);
 
 
-ALTER TABLE leave_requests
-ADD CONSTRAINT FK_leave_employee
-FOREIGN KEY (emp_no)
-REFERENCES employees(emp_no);
+-- =========================
+-- 연차 신청 데이터
+-- =========================
 
-ALTER TABLE leave_requests
-ADD CONSTRAINT FK_leave_approver
-FOREIGN KEY (approved_by)
-REFERENCES employees(emp_no);
+INSERT INTO leave_requests (
+    emp_no,
+    leave_type,
+    leave_days,
+    start_date,
+    end_date,
+    reason,
+    accrual_rule,
+    leave_status,
+    approved_by,
+    is_active
+) VALUES
+
+
+-- 팀장 승인 대기
+(
+    1,
+    '연차',
+    1.0,
+    '2026-05-10',
+    '2026-05-10',
+    '개인 일정',
+    '매년 1월 1일 기준',
+    'PENDING_MANAGER',
+    NULL,
+    'Y'
+),
+
+-- 인사팀 승인 대기
+(
+    1,
+    '오전반차',
+    0.5,
+    '2026-05-15',
+    '2026-05-15',
+    '병원 방문',
+    '매년 1월 1일 기준',
+    'PENDING_HR',
+    2,
+    'Y'
+),
+
+-- 최종 승인 완료
+(
+    1,
+    '연차',
+    2.0,
+    '2026-04-20',
+    '2026-04-21',
+    '여행',
+    '매년 1월 1일 기준',
+    'APPROVED',
+    3,
+    'Y'
+),
+
+-- 반려
+(
+    4,
+    '연차',
+    1.0,
+    '2026-03-10',
+    '2026-03-10',
+    '개인 업무',
+    '매년 1월 1일 기준',
+    'REJECTED',
+    2,
+    'Y'
+);
