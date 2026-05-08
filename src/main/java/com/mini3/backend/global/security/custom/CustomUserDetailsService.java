@@ -2,6 +2,7 @@ package com.mini3.backend.global.security.custom;
 
 import com.mini3.backend.domain.auth.enums.Role;
 import com.mini3.backend.domain.employee.entity.Employee;
+import com.mini3.backend.domain.employee.enums.Position;
 import com.mini3.backend.domain.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
@@ -14,7 +15,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final EmployeeRepository employeeRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String empNo) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String empNo)
+            throws UsernameNotFoundException {
 
         Employee employee = employeeRepository.findById(Long.parseLong(empNo))
                 .orElseThrow(() -> new UsernameNotFoundException("사용자 없음"));
@@ -26,14 +28,17 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private Role getRole(Employee employee) {
 
-        if (employee.getDepartment().getDeptName().equals("HR")) {
+        // 인사팀이면 무조건 관리자
+        if (employee.getDepartment().getDeptName().equals("인사팀")) {
             return Role.ROLE_ADMIN;
         }
 
-        if (employee.getPosition().equals("팀장")) {
+        // 일반 부서 팀장
+        if (employee.getPosition() == Position.팀장) {
             return Role.ROLE_MANAGER;
         }
 
+        // 일반 사원
         return Role.ROLE_EMPLOYEE;
     }
 }
