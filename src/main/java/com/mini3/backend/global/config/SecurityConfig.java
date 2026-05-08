@@ -1,5 +1,6 @@
 package com.mini3.backend.global.config;
 
+import org.springframework.http.HttpMethod;
 import com.mini3.backend.global.security.custom.CustomUserDetailsService;
 import com.mini3.backend.global.security.jwt.*;
 import lombok.RequiredArgsConstructor;
@@ -46,29 +47,34 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http)
             throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+       http
+        .csrf(csrf -> csrf.disable())
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS))
+        .cors(cors -> {})
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/login",
-                                "/health"
-                        ).permitAll()
+        .sessionManagement(session ->
+                session.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS))
 
-                        .anyRequest().authenticated()
-                )
+        .authorizeHttpRequests(auth -> auth
 
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(
-                                jwtProvider,
-                                customUserDetailsService
-                        ),
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                .requestMatchers(
+                        "/api/auth/login",
+                        "/health"
+                ).permitAll()
+
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                .anyRequest().authenticated()
+        )
+
+        .addFilterBefore(
+                new JwtAuthenticationFilter(
+                        jwtProvider,
+                        customUserDetailsService
+                ),
+                UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
