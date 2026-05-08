@@ -5,6 +5,7 @@ import com.mini3.backend.domain.department.repository.DepartmentRepository;
 import com.mini3.backend.domain.employee.dto.EmployeeRequest;
 import com.mini3.backend.domain.employee.dto.EmployeeResponse;
 import com.mini3.backend.domain.employee.entity.Employee;
+import com.mini3.backend.domain.employee.enums.Position;
 import com.mini3.backend.domain.employee.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class EmployeeService {
                 .empName(request.getEmpName())
                 .department(department)
                 .jobTitle(request.getJobTitle())
-                .position(request.getPosition())
+                .position(parsePosition(request.getPosition()))
                 .hireDate(request.getHireDate())
                 .password(request.getPassword()) // 추후 최혜인님 담당 PasswordEncoder 연동 필요
                 .build();
@@ -79,7 +80,7 @@ public class EmployeeService {
         employee.setEmpName(request.getEmpName());
         employee.setDepartment(department);
         employee.setJobTitle(request.getJobTitle());
-        employee.setPosition(request.getPosition());
+        employee.setPosition(parsePosition(request.getPosition()));
         
         return EmployeeResponse.from(employee);
     }
@@ -93,5 +94,12 @@ public class EmployeeService {
             throw new EntityNotFoundException("해당 사원이 존재하지 않습니다.");
         }
         employeeRepository.deleteById(empNo);
+    }
+
+    private Position parsePosition(String position) {
+        if (position == null || position.isBlank()) {
+            throw new IllegalArgumentException("직급(position)은 필수입니다.");
+        }
+        return Position.valueOf(position.trim());
     }
 }
