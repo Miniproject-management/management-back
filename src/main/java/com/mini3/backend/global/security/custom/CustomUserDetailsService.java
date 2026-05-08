@@ -18,7 +18,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String empNo)
             throws UsernameNotFoundException {
 
-        Employee employee = employeeRepository.findById(Long.parseLong(empNo))
+        Employee employee = employeeRepository
+                .findByEmpNoWithDepartment(Long.parseLong(empNo))
                 .orElseThrow(() -> new UsernameNotFoundException("사용자 없음"));
 
         Role role = getRole(employee);
