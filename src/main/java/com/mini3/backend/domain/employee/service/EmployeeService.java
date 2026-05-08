@@ -23,40 +23,32 @@ public class EmployeeService {
     private final DepartmentRepository departmentRepository;
 
     /**
-     * 신규 사원 등록
+     * [신규 사원 등록]
+     * 명세서에는 없는 비밀번호를 엔티티의 필수 조건에 맞춰 "1234"로 초기화하여 저장합니다.
      */
     @Transactional
-    public EmployeeResponse createEmployee(EmployeeRequest request) {
-        // 1. 부서 존재 여부 확인
-        Department department = departmentRepository.findById(request.getDeptNo())
-                .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다."));
+    public Long createEmployee(EmployeeRequest request) {
+        // 1. 요청된 부서 번호로 부서 엔티티 조회 (연관관계 설정용)
+        Department department = departmentRepository.findById(request.deptNo())
+                .orElseThrow(() -> new EntityNotFoundException("부서를 찾을 수 없습니다. ID: " + request.deptNo()));
 
-        // 2. DTO -> Entity 변환
+        // 2. 엔티티 빌드 및 저장
+        // 엔티티의 모든 nullable = false 컬럼을 확실히 매핑합니다.
         Employee employee = Employee.builder()
-                .empName(request.getEmpName())
+                .empName(request.empName())
                 .department(department)
-                .jobTitle(request.getJobTitle())
-                .position(request.getPosition())
-                .hireDate(request.getHireDate())
-                .password(request.getPassword()) // 추후 최혜인님 담당 PasswordEncoder 연동 필요
+                .jobTitle(request.jobTitle())
+                .position(request.position())
+                .hireDate(request.hireDate())
+                .password("1234") // 초기 비밀번호 자동 설정 (DB 제약 조건 충족)
                 .build();
 
-        // 3. 저장 및 응답 DTO 반환
         Employee savedEmployee = employeeRepository.save(employee);
-        return EmployeeResponse.from(savedEmployee);
+        return savedEmployee.getEmpNo();
     }
 
     /**
-     * 사원 상세 조회
-     */
-    public EmployeeResponse getEmployee(Long empNo) {
-        Employee employee = employeeRepository.findById(empNo)
-                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다."));
-        return EmployeeResponse.from(employee);
-    }
-
-    /**
-     * 전체 사원 목록 조회
+     * [전체 사원 목록 조회]
      */
     public List<EmployeeResponse> getAllEmployees() {
         return employeeRepository.findAll().stream()
@@ -65,33 +57,32 @@ public class EmployeeService {
     }
 
     /**
-     * 사원 정보 수정 (부서 이동, 직급 변경 등)
+     * [사원 상세 조회]
      */
-    @Transactional
-    public EmployeeResponse updateEmployee(Long empNo, EmployeeRequest request) {
+    public EmployeeResponse getEmployee(Long empNo) {
         Employee employee = employeeRepository.findById(empNo)
-                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다."));
-
-        Department department = departmentRepository.findById(request.getDeptNo())
-                .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다."));
-
-        // 엔티티 업데이트 (Setter 또는 비즈니스 메서드 활용)
-        employee.setEmpName(request.getEmpName());
-        employee.setDepartment(department);
-        employee.setJobTitle(request.getJobTitle());
-        employee.setPosition(request.getPosition());
+                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다. 사번: " + empNo));
         
         return EmployeeResponse.from(employee);
     }
 
     /**
-     * 사원 삭제 (퇴사 처리 등)
+     * [인사 정보 수정]
+     * 명세서의 PUT /api/hr/employees/{empNo} 대응용
      */
     @Transactional
-    public void deleteEmployee(Long empNo) {
-        if (!employeeRepository.existsById(empNo)) {
-            throw new EntityNotFoundException("해당 사원이 존재하지 않습니다.");
-        }
-        employeeRepository.deleteById(empNo);
+    public void updateEmployee(Long empNo, EmployeeRequest request) {
+        Employee employee = employeeRepository.findById(empNo)
+                .orElseThrow(() -> new EntityNotFoundException("수정할 사원 정보가 없습니다."));
+
+        Department department = departmentRepository.findById(request.deptNo())
+                .orElseThrow(() -> new EntityNotFoundException("변경할 부서를 찾을 수 없습니다."));
+
+        // 엔티티의 Setter나 별도 변경 메서드를 통해 정보 업데이트
+        employee.setEmpName(request.empName());
+        employee.setDepartment(department);
+        employee.setJobTitle(request.jobTitle());
+        employee.setPosition(request.position());
+        // Dirty Checking에 의해 트랜잭션 종료 시 자동 반영됩니다.
     }
 }
