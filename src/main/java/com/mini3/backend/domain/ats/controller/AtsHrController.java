@@ -20,17 +20,17 @@ public class AtsHrController {
 
     private final AtsService atsService;
 
-    @GetMapping
+    @GetMapping // 지원자 목록 조회
     public ResponseEntity<List<AtsApplicantDto.ListItem>> getApplicants() {
         return ResponseEntity.ok(atsService.getApplicants());
     }
 
-    @GetMapping("/{applicantId}")
+    @GetMapping("/{applicantId}") // 한 명 클릭 시 상세 정보
     public ResponseEntity<AtsApplicantDto.Detail> getApplicantDetail(@PathVariable Long applicantId) {
         return ResponseEntity.ok(atsService.getApplicantDetail(applicantId));
     }
 
-    @PostMapping("/{applicantId}/analyze")
+    @PostMapping("/{applicantId}/analyze") // HR 이 분석하기 눌렀을 때 호출하는 API
     public ResponseEntity<AtsAnalysisDto.AnalyzeResult> analyzeApplicant(@PathVariable Long applicantId) {
         return ResponseEntity.ok(atsService.analyzeApplicantResume(applicantId));
     }
