@@ -1,19 +1,21 @@
+-- =========================
+-- 스키마 생성
+-- =========================
+
+DROP TABLE IF EXISTS leave_balances;
 DROP TABLE IF EXISTS leave_requests;
 DROP TABLE IF EXISTS employees;
 DROP TABLE IF EXISTS departments;
 
 
--- 부서정보
 CREATE TABLE departments (
     dept_no BIGINT NOT NULL AUTO_INCREMENT,
     dept_name VARCHAR(100) NOT NULL,
     dept_desc VARCHAR(255),
-
     PRIMARY KEY (dept_no)
 ) ENGINE=InnoDB;
 
 
--- 인사정보
 CREATE TABLE employees (
     emp_no BIGINT NOT NULL AUTO_INCREMENT,
     emp_name VARCHAR(100) NOT NULL,
@@ -22,12 +24,10 @@ CREATE TABLE employees (
     position VARCHAR(50) NOT NULL,
     hire_date DATE NOT NULL,
     password VARCHAR(255) NOT NULL,
-
     PRIMARY KEY (emp_no)
 ) ENGINE=InnoDB;
 
 
--- 연차정보
 CREATE TABLE leave_requests (
     leave_id BIGINT NOT NULL AUTO_INCREMENT,
     emp_no BIGINT NOT NULL,
@@ -37,37 +37,35 @@ CREATE TABLE leave_requests (
     end_date DATE NOT NULL,
     reason TEXT,
     accrual_rule VARCHAR(255) NOT NULL,
-
-     -- 결재 상태
-        -- PENDING_MANAGER : 팀장 승인 대기
-        -- PENDING_HR      : 인사팀 승인 대기
-        -- APPROVED        : 최종 승인
-        -- REJECTED        : 반려
-        -- CANCELED        : 신청 취소
     leave_status VARCHAR(30) NOT NULL DEFAULT 'PENDING_MANAGER',
-    -- 마지막 승인자
-        approved_by BIGINT,
-
+    approved_by BIGINT,
     is_active CHAR(1) NOT NULL DEFAULT 'Y',
-
     PRIMARY KEY (leave_id)
 ) ENGINE=InnoDB;
 
 
-
--- 연차 잔여량
 CREATE TABLE leave_balances (
     balance_id BIGINT NOT NULL AUTO_INCREMENT,
     emp_no BIGINT NOT NULL,
     year INT NOT NULL,
     total_leave DECIMAL(5,2) NOT NULL DEFAULT 15.00,
     used_leave DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-
     PRIMARY KEY (balance_id)
 ) ENGINE=InnoDB;
 
 
--- FK 설정
+CREATE TABLE audit_logs (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    action VARCHAR(50) NOT NULL,
+    emp_no BIGINT,
+    target_id BIGINT,
+    detail VARCHAR(500),
+    ip_address VARCHAR(45),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+
 ALTER TABLE employees
 ADD CONSTRAINT FK_employees_department
 FOREIGN KEY (dept_no)
@@ -79,26 +77,14 @@ ADD CONSTRAINT FK_leave_employee
 FOREIGN KEY (emp_no)
 REFERENCES employees(emp_no);
 
+
 ALTER TABLE leave_requests
 ADD CONSTRAINT FK_leave_approver
 FOREIGN KEY (approved_by)
 REFERENCES employees(emp_no);
 
+
 ALTER TABLE leave_balances
 ADD CONSTRAINT FK_balance_employee
 FOREIGN KEY (emp_no)
 REFERENCES employees(emp_no);
-
-
--- 감사 로그
-CREATE TABLE audit_logs (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    action VARCHAR(50) NOT NULL,
-    emp_no BIGINT,
-    target_id BIGINT,
-    detail VARCHAR(500),
-    ip_address VARCHAR(45),
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id)
-) ENGINE=InnoDB;
