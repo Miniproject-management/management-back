@@ -42,4 +42,15 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
 
     List<LeaveRequest> findByEmployee_EmpNoAndLeaveStatusInAndIsActive(
             Long empNo, List<LeaveStatus> statuses, String isActive);
+
+    @Query("SELECT lr FROM LeaveRequest lr JOIN FETCH lr.employee e " +
+            "WHERE e.department.deptNo = :deptNo AND lr.leaveStatus = :status AND lr.isActive = 'Y' " +
+            "ORDER BY lr.leaveId DESC")
+    List<LeaveRequest> findPendingByDept(@Param("deptNo") Long deptNo,
+                                         @Param("status") LeaveStatus status);
+
+    @Query("SELECT lr FROM LeaveRequest lr JOIN FETCH lr.employee e " +
+            "WHERE lr.leaveStatus = :status AND lr.isActive = 'Y' " +
+            "ORDER BY lr.leaveId DESC")
+    List<LeaveRequest> findPendingByStatus(@Param("status") LeaveStatus status);
 }

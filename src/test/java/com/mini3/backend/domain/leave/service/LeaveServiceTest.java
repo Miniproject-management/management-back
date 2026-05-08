@@ -9,6 +9,7 @@ import com.mini3.backend.domain.leave.entity.LeaveRequest;
 import com.mini3.backend.domain.leave.enums.LeaveStatus;
 import com.mini3.backend.domain.leave.repository.LeaveBalanceRepository;
 import com.mini3.backend.domain.leave.repository.LeaveRequestRepository;
+import com.mini3.backend.global.exception.InsufficientLeaveException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -91,6 +92,7 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 2));
         dto.setEndDate(LocalDate.of(2026, 6, 3));
+        dto.setRequestDays(2);
         dto.setReason("개인 일정");
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
@@ -105,7 +107,7 @@ class LeaveServiceTest {
     }
 
     @Test
-    @DisplayName("남은 연차 부족 시 에러")
+    @DisplayName("남은 연차 부족 시 InsufficientLeaveException 발생")
     void applyLeave_insufficientBalance() {
         balance.setUsedLeave(new BigDecimal("14.00"));
 
@@ -114,13 +116,14 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 1));
         dto.setEndDate(LocalDate.of(2026, 6, 5));
+        dto.setRequestDays(5);
         dto.setReason("여행");
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
         given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026)).willReturn(Optional.of(balance));
 
         assertThatThrownBy(() -> leaveService.applyLeave(dto))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(InsufficientLeaveException.class)
                 .hasMessageContaining("남은 연차가 부족합니다");
     }
 
@@ -132,6 +135,7 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 2));
         dto.setEndDate(LocalDate.of(2026, 6, 2));
+        dto.setRequestDays(1);
         dto.setReason("개인 일정");
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
@@ -142,6 +146,24 @@ class LeaveServiceTest {
         assertThatThrownBy(() -> leaveService.applyLeave(dto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("이미 해당 기간에 신청된 휴가가 있습니다");
+    }
+
+    @Test
+    @DisplayName("Negative Value Attack: requestDays를 조작해도 서버 재계산으로 차단")
+    void applyLeave_negativeValueAttack_mismatch() {
+        LeaveRequestDto dto = new LeaveRequestDto();
+        dto.setEmpNo(1L);
+        dto.setLeaveType("연차");
+        dto.setStartDate(LocalDate.of(2026, 6, 2));
+        dto.setEndDate(LocalDate.of(2026, 6, 3));
+        dto.setRequestDays(5);
+        dto.setReason("조작 시도");
+
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+
+        assertThatThrownBy(() -> leaveService.applyLeave(dto))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("신청 일수가 실제 영업일과 일치하지 않습니다");
     }
 
     @Test

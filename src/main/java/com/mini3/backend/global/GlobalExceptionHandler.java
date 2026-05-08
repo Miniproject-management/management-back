@@ -1,5 +1,6 @@
 package com.mini3.backend.global;
 
+import com.mini3.backend.global.exception.InsufficientLeaveException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,16 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InsufficientLeaveException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientLeave(InsufficientLeaveException e) {
+        return ResponseEntity.badRequest()
+                .body(Map.of(
+                        "error", e.getMessage(),
+                        "remainingLeave", e.getRemainingLeave(),
+                        "requestedDays", e.getRequestedDays()
+                ));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException e) {

@@ -8,6 +8,7 @@ import com.mini3.backend.domain.leave.entity.LeaveRequest;
 import com.mini3.backend.domain.leave.enums.LeaveStatus;
 import com.mini3.backend.domain.leave.repository.LeaveBalanceRepository;
 import com.mini3.backend.domain.leave.repository.LeaveRequestRepository;
+import com.mini3.backend.global.exception.InsufficientLeaveException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,15 +46,24 @@ public class LeaveService {
             dto.setReason(sanitize(dto.getReason()));
         }
 
-        BigDecimal leaveDays = calculateBusinessDays(dto.getStartDate(), dto.getEndDate(), dto.getLeaveType());
+        // 서버에서 시작일/종료일 기준으로 신청 일수 재계산 (클라이언트 requestDays 불신)
+        BigDecimal serverCalculatedDays = calculateBusinessDays(dto.getStartDate(), dto.getEndDate(), dto.getLeaveType());
 
+        // 클라이언트가 보낸 requestDays와 서버 계산 결과 비교 (조작 탐지)
+        BigDecimal clientRequestDays = new BigDecimal(dto.getRequestDays());
+        if (clientRequestDays.compareTo(serverCalculatedDays) != 0) {
+            throw new IllegalArgumentException(
+                    "신청 일수가 실제 영업일과 일치하지 않습니다. (서버 계산: " + serverCalculatedDays + "일)");
+        }
+
+        // DB에서 잔여 연차 조회 (클라이언트 값 불신, 반드시 DB 기준)
         int year = dto.getStartDate().getYear();
         LeaveBalance balance = leaveBalanceRepository.findByEmployee_EmpNoAndYear(dto.getEmpNo(), year)
                 .orElseThrow(() -> new IllegalArgumentException("연차 정보가 없습니다."));
 
-        if (balance.getRemainingLeave().compareTo(leaveDays) < 0) {
-            throw new IllegalArgumentException(
-                    "남은 연차가 부족합니다. (남은 연차: " + balance.getRemainingLeave() + "일, 신청: " + leaveDays + "일)");
+        // DB 잔여 연차 vs 서버 계산 일수 비교
+        if (balance.getRemainingLeave().compareTo(serverCalculatedDays) < 0) {
+            throw new InsufficientLeaveException(balance.getRemainingLeave(), serverCalculatedDays);
         }
 
         List<LeaveRequest> overlapping = leaveRequestRepository.findOverlapping(
@@ -65,7 +75,7 @@ public class LeaveService {
         LeaveRequest request = LeaveRequest.builder()
                 .employee(employee)
                 .leaveType(dto.getLeaveType())
-                .leaveDays(leaveDays)
+                .leaveDays(serverCalculatedDays)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .reason(dto.getReason())
@@ -128,6 +138,34 @@ public class LeaveService {
         request.setLeaveStatus(LeaveStatus.CANCELED);
         request.setIsActive("N");
         return leaveRequestRepository.save(request);
+    }
+
+    public LeaveRequest getById(Long leaveId) {
+        return leaveRequestRepository.findById(leaveId)
+                .orElseThrow(() -> new IllegalArgumentException("휴가 신청을 찾을 수 없습니다."));
+    }
+
+    public List<LeaveRequest> getMyRequests(Long empNo) {
+        return leaveRequestRepository.findByEmployee_EmpNoAndIsActive(empNo, "Y");
+    }
+
+    public List<LeaveRequest> getPendingForApprover(Long approverEmpNo) {
+        Employee approver = employeeRepository.findById(approverEmpNo)
+                .orElseThrow(() -> new IllegalArgumentException("승인자를 찾을 수 없습니다."));
+
+        String position = approver.getPosition();
+        if (position == null) {
+            return List.of();
+        }
+
+        if (position.contains("인사")) {
+            return leaveRequestRepository.findPendingByStatus(LeaveStatus.PENDING_HR);
+        }
+        if (position.contains("팀장") || position.contains("매니저")) {
+            Long deptNo = approver.getDepartment().getDeptNo();
+            return leaveRequestRepository.findPendingByDept(deptNo, LeaveStatus.PENDING_MANAGER);
+        }
+        return List.of();
     }
 
     public BigDecimal calculateBusinessDays(LocalDate start, LocalDate end, String leaveType) {

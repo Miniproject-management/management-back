@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/leaves")
 @RequiredArgsConstructor
@@ -27,6 +29,28 @@ public class LeaveController {
                 dto.getLeaveType() + " " + dto.getStartDate() + "~" + dto.getEndDate(),
                 getClientIp(httpRequest));
         return ResponseEntity.ok(LeaveRequestResponse.from(result));
+    }
+
+    @GetMapping("/{leaveId}")
+    public ResponseEntity<LeaveRequestResponse> getOne(@PathVariable Long leaveId) {
+        LeaveRequest result = leaveService.getById(leaveId);
+        return ResponseEntity.ok(LeaveRequestResponse.from(result));
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<LeaveRequestResponse>> getMyRequests(@RequestParam Long empNo) {
+        List<LeaveRequestResponse> result = leaveService.getMyRequests(empNo).stream()
+                .map(LeaveRequestResponse::from)
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<LeaveRequestResponse>> getPending(@RequestParam Long approverEmpNo) {
+        List<LeaveRequestResponse> result = leaveService.getPendingForApprover(approverEmpNo).stream()
+                .map(LeaveRequestResponse::from)
+                .toList();
+        return ResponseEntity.ok(result);
     }
 
     @PatchMapping("/{leaveId}/approve")
