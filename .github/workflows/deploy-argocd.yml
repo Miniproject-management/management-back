@@ -64,10 +64,12 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}   # 인프라 저장소 푸시 권한이 있는 PAT
           path: infra-repo 
       - name: Update Manifest
+        env:
+          ECR_IMAGE: ${{ secrets.ECR_BACKEND_URI }}:${{ github.sha }}
         run: |
           cd infra-repo
           # infra/manifests/backend/deployment.yaml 내의 image: 부분을 새 이미지 태그로 변경
-          sed -i "s|image:.*|image: ${{ steps.build-image.outputs.image }}|g" manifests/backend/deployment.yaml
+          sed -i "s|image: .*|image: ${ECR_IMAGE}|g" manifests/backend/deployment.yaml
       - name: Commit and Push Changes
         run: |
           cd infra-repo
