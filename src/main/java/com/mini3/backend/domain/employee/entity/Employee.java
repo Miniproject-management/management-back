@@ -1,5 +1,6 @@
 package com.mini3.backend.domain.employee.entity;
 
+import com.mini3.backend.domain.employee.enums.Position;
 import com.mini3.backend.domain.department.entity.Department;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,8 +31,9 @@ public class Employee {
     @Column(name = "job_title", nullable = false, length = 100)
     private String jobTitle;
 
-    @Column(name = "position", nullable = false, length = 50)
-    private String position;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "position", nullable = false)
+    private Position position;
 
     @Column(name = "hire_date", nullable = false)
     private LocalDate hireDate;
