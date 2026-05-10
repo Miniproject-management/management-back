@@ -5,7 +5,7 @@ import com.mini3.backend.domain.department.repository.DepartmentRepository;
 import com.mini3.backend.domain.employee.dto.EmployeeRequest;
 import com.mini3.backend.domain.employee.dto.EmployeeResponse;
 import com.mini3.backend.domain.employee.entity.Employee;
-import com.mini3.backend.domain.employee.enums.Position;
+import com.mini3.backend.domain.employee.enums.Position; // Enum 임포트
 import com.mini3.backend.domain.employee.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,29 +25,31 @@ public class EmployeeService {
 
     /**
      * [신규 사원 등록]
+     * Main 브랜치의 방식대로 요청(Request)에서 비밀번호를 가져와 저장합니다.
      */
     @Transactional
     public Long createEmployee(EmployeeRequest request) {
-        // 1. 부서 확인
+        // 1. 부서 존재 여부 확인
         Department department = departmentRepository.findById(request.getDeptNo())
-                .orElseThrow(() -> new EntityNotFoundException("부서를 찾을 수 없습니다. ID: " + request.getDeptNo()));
+                .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다. ID: " + request.getDeptNo()));
 
-        // 2. DTO -> Entity 변환
-        // request.getPosition()으로 들어온 문자열("사원", "팀장" 등)을 Enum으로 검증 후 저장합니다.
+        // 2. DTO -> Entity 변환 (Main 방식 준수)
         Employee employee = Employee.builder()
                 .empName(request.getEmpName())
                 .department(department)
                 .jobTitle(request.getJobTitle())
-                .position(validateAndGetPosition(request.getPosition())) // Enum 검증 로직 호출
+                .position(parsePosition(request.getPosition())) // Enum 변환 로직 사용
                 .hireDate(request.getHireDate())
-                .password("1234") // 초기 비밀번호 세팅
+                .password(request.getPassword()) // Main 브랜치 방식: 요청받은 비번 그대로 사용
                 .build();
 
-        return employeeRepository.save(employee).getEmpNo();
+        // 3. 저장 및 생성된 사번 반환
+        Employee savedEmployee = employeeRepository.save(employee);
+        return savedEmployee.getEmpNo();
     }
 
     /**
-     * [전체 사원 조회]
+     * [전체 사원 목록 조회]
      */
     public List<EmployeeResponse> getAllEmployees() {
         return employeeRepository.findAll().stream()
@@ -60,7 +62,7 @@ public class EmployeeService {
      */
     public EmployeeResponse getEmployee(Long empNo) {
         Employee employee = employeeRepository.findById(empNo)
-                .orElseThrow(() -> new EntityNotFoundException("사원을 찾을 수 없습니다. 사번: " + empNo));
+                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다. 사번: " + empNo));
         return EmployeeResponse.from(employee);
     }
 
@@ -70,16 +72,18 @@ public class EmployeeService {
     @Transactional
     public void updateEmployee(Long empNo, EmployeeRequest request) {
         Employee employee = employeeRepository.findById(empNo)
-                .orElseThrow(() -> new EntityNotFoundException("수정할 사원이 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("수정할 사원 정보를 찾을 수 없습니다."));
 
         Department department = departmentRepository.findById(request.getDeptNo())
-                .orElseThrow(() -> new EntityNotFoundException("부서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new EntityNotFoundException("변경할 부서를 찾을 수 없습니다."));
 
         employee.setEmpName(request.getEmpName());
         employee.setDepartment(department);
         employee.setJobTitle(request.getJobTitle());
-        employee.setPosition(validateAndGetPosition(request.getPosition()));
+        employee.setPosition(parsePosition(request.getPosition()));
         employee.setHireDate(request.getHireDate());
+        // 수정 시에도 비번을 업데이트한다면 아래 추가 (선택사항)
+        // employee.setPassword(request.getPassword()); 
     }
 
     /**
@@ -88,21 +92,23 @@ public class EmployeeService {
     @Transactional
     public void deleteEmployee(Long empNo) {
         if (!employeeRepository.existsById(empNo)) {
-            throw new EntityNotFoundException("삭제할 사원이 없습니다.");
+            throw new EntityNotFoundException("삭제할 사원이 존재하지 않습니다.");
         }
         employeeRepository.deleteById(empNo);
     }
 
     /**
-     * [Enum 검증 메서드]
-     * 입력된 문자열이 Position Enum(사원, 팀장, 관리자)에 존재하는지 확인합니다.
+     * [Position Enum 변환 및 검증]
      */
-    private String validateAndGetPosition(String positionName) {
+    private String parsePosition(String position) {
+        if (position == null || position.isBlank()) {
+            throw new IllegalArgumentException("직급(position)은 필수 입력 값입니다.");
+        }
         try {
-            // Position.valueOf("사원") 등을 통해 Enum 상수가 있는지 확인합니다.
-            return Position.valueOf(positionName.trim()).name();
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("유효하지 않은 직급입니다. (사원, 팀장, 관리자 중 입력): " + positionName);
+            // 한글 Enum 상수("사원", "팀장", "관리자")와 매칭되는지 확인
+            return Position.valueOf(position.trim()).name();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("허용되지 않는 직급입니다: " + position + " (사원, 팀장, 관리자 중 입력)");
         }
     }
 }
