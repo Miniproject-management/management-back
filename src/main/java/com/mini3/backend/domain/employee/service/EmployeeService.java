@@ -25,40 +25,30 @@ public class EmployeeService {
     private final DepartmentRepository departmentRepository;
 
     /**
-     * 신규 사원 등록
+     * [신규 사원 등록]
      */
     @Transactional
-    public EmployeeResponse createEmployee(EmployeeRequest request) {
-        // 1. 부서 존재 여부 확인
-        Department department = departmentRepository.findById(request.getDeptNo())
-                .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다."));
+    public Long createEmployee(EmployeeRequest request) {
+        // 1. 부서 조회 (record 문법: deptNo())
+        Department department = departmentRepository.findById(request.deptNo())
+                .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다. ID: " + request.deptNo()));
 
-        // 2. DTO -> Entity 변환
+        // 2. 사원 엔티티 빌드
         Employee employee = Employee.builder()
-                .empName(request.getEmpName())
+                .empName(request.empName())
                 .department(department)
-                .jobTitle(request.getJobTitle())
-                .position(parsePosition(request.getPosition()))
-                .hireDate(request.getHireDate())
-                .password(request.getPassword()) // 추후 최혜인님 담당 PasswordEncoder 연동 필요
+                .jobTitle(request.jobTitle())
+                .position(parsePosition(request.position())) // Position Enum 객체 반환
+                .hireDate(request.hireDate())
+                .password(request.password()) // EmployeeRequest에 추가한 password 필드 사용
                 .build();
 
-        // 3. 저장 및 응답 DTO 반환
-        Employee savedEmployee = employeeRepository.save(employee);
-        return EmployeeResponse.from(savedEmployee);
+        // 3. 저장 및 사번 반환
+        return employeeRepository.save(employee).getEmpNo();
     }
 
     /**
-     * 사원 상세 조회
-     */
-    public EmployeeResponse getEmployee(Long empNo) {
-        Employee employee = employeeRepository.findById(empNo)
-                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다."));
-        return EmployeeResponse.from(employee);
-    }
-
-    /**
-     * 전체 사원 목록 조회
+     * [전체 사원 조회]
      */
     public List<EmployeeResponse> getAllEmployees() {
         return employeeRepository.findAll().stream()
@@ -67,40 +57,57 @@ public class EmployeeService {
     }
 
     /**
-     * 사원 정보 수정 (부서 이동, 직급 변경 등)
+     * [사원 상세 조회]
      */
-    @Transactional
-    public EmployeeResponse updateEmployee(Long empNo, EmployeeRequest request) {
+    public EmployeeResponse getEmployee(Long empNo) {
         Employee employee = employeeRepository.findById(empNo)
-                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다."));
-
-        Department department = departmentRepository.findById(request.getDeptNo())
-                .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다."));
-
-        // 엔티티 업데이트 (Setter 또는 비즈니스 메서드 활용)
-        employee.setEmpName(request.getEmpName());
-        employee.setDepartment(department);
-        employee.setJobTitle(request.getJobTitle());
-        employee.setPosition(parsePosition(request.getPosition()));
-        
+                .orElseThrow(() -> new EntityNotFoundException("해당 사원을 찾을 수 없습니다. 사번: " + empNo));
         return EmployeeResponse.from(employee);
     }
 
     /**
-     * 사원 삭제 (퇴사 처리 등)
+     * [인사 정보 수정]
+     */
+    @Transactional
+    public void updateEmployee(Long empNo, EmployeeRequest request) {
+        Employee employee = employeeRepository.findById(empNo)
+                .orElseThrow(() -> new EntityNotFoundException("수정할 사원 정보를 찾을 수 없습니다."));
+
+        Department department = departmentRepository.findById(request.deptNo())
+                .orElseThrow(() -> new EntityNotFoundException("변경할 부서를 찾을 수 없습니다."));
+
+        employee.setEmpName(request.empName());
+        employee.setDepartment(department);
+        employee.setJobTitle(request.jobTitle());
+        employee.setPosition(parsePosition(request.position()));
+        employee.setHireDate(request.hireDate());
+        // 필요 시: employee.setPassword(request.password());
+    }
+
+    /**
+     * [사원 삭제]
      */
     @Transactional
     public void deleteEmployee(Long empNo) {
         if (!employeeRepository.existsById(empNo)) {
-            throw new EntityNotFoundException("해당 사원이 존재하지 않습니다.");
+            throw new EntityNotFoundException("삭제할 사원이 존재하지 않습니다.");
         }
         employeeRepository.deleteById(empNo);
     }
 
-    private Position parsePosition(String position) {
-        if (position == null || position.isBlank()) {
-            throw new IllegalArgumentException("직급(position)은 필수입니다.");
+    /**
+     * [Position 문자열을 Enum 객체로 변환]
+     * 반환 타입이 Position(Enum)인 것이 핵심입니다.
+     */
+    private Position parsePosition(String positionName) {
+        if (positionName == null || positionName.isBlank()) {
+            throw new IllegalArgumentException("직급(position)은 필수 입력 값입니다.");
         }
-        return Position.valueOf(position.trim());
+        try {
+            // 한글 상수명("사원", "팀장", "관리자")과 일치하는 Enum 객체 반환
+            return Position.valueOf(positionName.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("허용되지 않는 직급입니다: " + positionName + " (사원, 팀장, 관리자 중 입력)");
+        }
     }
 }
