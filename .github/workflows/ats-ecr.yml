@@ -23,12 +23,12 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image (ATS only)
+      - name: Build Docker image (document-analyzer)
         run: |
           docker build \
-            -f src/main/java/.../ats/Dockerfile \
+            -f src/main/java/com/mini3/backend/domain/ats/Dockerfile \
             -t document-analyzer:latest \
-            src/main/java/.../ats
+            src/main/java/com/mini3/backend/domain/ats
 
       - name: Tag image
         run: |
