@@ -96,7 +96,7 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 2));
         dto.setEndDate(LocalDate.of(2026, 6, 3));
-        dto.setRequestDays(2);
+        dto.setRequestDays(new BigDecimal("2"));
         dto.setReason("개인 일정");
 
         given(employeeRepository.findById(1L))
@@ -132,7 +132,7 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 1));
         dto.setEndDate(LocalDate.of(2026, 6, 5));
-        dto.setRequestDays(5);
+        dto.setRequestDays(new BigDecimal("5"));
         dto.setReason("여행");
 
         given(employeeRepository.findById(1L))
@@ -156,7 +156,7 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 2));
         dto.setEndDate(LocalDate.of(2026, 6, 2));
-        dto.setRequestDays(1);
+        dto.setRequestDays(new BigDecimal("1"));
         dto.setReason("개인 일정");
 
         given(employeeRepository.findById(1L))
@@ -183,7 +183,7 @@ class LeaveServiceTest {
         dto.setLeaveType("연차");
         dto.setStartDate(LocalDate.of(2026, 6, 2));
         dto.setEndDate(LocalDate.of(2026, 6, 3));
-        dto.setRequestDays(5);
+        dto.setRequestDays(new BigDecimal("5"));
         dto.setReason("조작 시도");
 
         given(employeeRepository.findById(1L))

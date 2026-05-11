@@ -4,13 +4,13 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
 @Setter
 public class LeaveRequestDto {
 
-    @NotNull(message = "사원 번호는 필수입니다.")
     private Long empNo;
 
     @NotBlank(message = "휴가 유형은 필수입니다.")
@@ -25,8 +25,8 @@ public class LeaveRequestDto {
     private LocalDate endDate;
 
     @NotNull(message = "신청 일수는 필수입니다.")
-    @Min(value = 1, message = "신청 일수는 1일 이상이어야 합니다.")
-    private Integer requestDays;
+    @DecimalMin(value = "0.5", message = "신청 일수는 0.5일 이상이어야 합니다.")
+    private BigDecimal requestDays;
 
     @Size(max = 500, message = "사유는 500자 이내로 입력해주세요.")
     private String reason;
