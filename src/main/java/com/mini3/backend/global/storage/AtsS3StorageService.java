@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -53,6 +54,21 @@ public class AtsS3StorageService {
         }
 
         return key;
+    }
+
+    /**
+     * S3 객체 전체 바이트를 읽는다. Gemini 등 이력서 분석 파이프라인에서 사용한다.
+     */
+    public byte[] getObjectBytes(String objectKey) {
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .build();
+        try (var response = s3Client.getObject(request)) {
+            return response.readAllBytes();
+        } catch (IOException e) {
+            throw new IllegalStateException("S3 객체를 읽지 못했습니다.", e);
+        }
     }
 
     private static String sanitizeFileName(String name) {
