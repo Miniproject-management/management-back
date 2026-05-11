@@ -8,11 +8,21 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long> {
 
-    List<LeaveRequest> findByEmployee_EmpNoAndIsActive(Long empNo, String isActive);
-
+        @Query("""
+        SELECT lr
+        FROM LeaveRequest lr
+        JOIN FETCH lr.employee
+        WHERE lr.employee.empNo = :empNo
+        AND lr.isActive = :isActive
+        """)
+        List<LeaveRequest> findByEmployee_EmpNoAndIsActive(
+                @Param("empNo") Long empNo,
+                @Param("isActive") String isActive
+        );
     List<LeaveRequest> findByEmployee_EmpNoAndLeaveStatusAndIsActive(Long empNo, LeaveStatus status, String isActive);
 
     @Query("SELECT lr FROM LeaveRequest lr WHERE lr.employee.empNo = :empNo " +
@@ -53,4 +63,14 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
             "WHERE lr.leaveStatus = :status AND lr.isActive = 'Y' " +
             "ORDER BY lr.leaveId DESC")
     List<LeaveRequest> findPendingByStatus(@Param("status") LeaveStatus status);
+
+    @Query("""
+        SELECT lr
+        FROM LeaveRequest lr
+        JOIN FETCH lr.employee
+        WHERE lr.leaveId = :leaveId
+        """)
+        Optional<LeaveRequest> findDetailById(
+                @Param("leaveId") Long leaveId
+        );
 }

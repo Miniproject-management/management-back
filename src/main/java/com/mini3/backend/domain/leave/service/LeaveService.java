@@ -208,7 +208,7 @@ public class LeaveService {
 
     public LeaveRequest getById(Long leaveId) {
 
-        return leaveRequestRepository.findById(leaveId)
+        return leaveRequestRepository.findDetailById(leaveId)
                 .orElseThrow(() -> new IllegalArgumentException("휴가 신청을 찾을 수 없습니다."));
     }
 
