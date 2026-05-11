@@ -23,15 +23,15 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
     // 테스트용
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-    }
+//     @Bean
+//     public PasswordEncoder passwordEncoder() {
+//         return NoOpPasswordEncoder.getInstance();
+//     }
 
-//    @Bean
-//    public BCryptPasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
+   @Bean
+   public BCryptPasswordEncoder passwordEncoder() {
+       return new BCryptPasswordEncoder();
+   }
 
     @Bean
     public AuthenticationManager authenticationManager(
