@@ -17,6 +17,10 @@ repositories {
     mavenCentral()
 }
 
+springBoot {
+    mainClass = 'com.mini3.backend.domain.ats.DocumentAnalyzerApplication'
+}
+
 dependencies {
     // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
