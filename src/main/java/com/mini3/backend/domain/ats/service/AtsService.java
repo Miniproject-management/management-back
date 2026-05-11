@@ -2,16 +2,16 @@ package com.mini3.backend.domain.ats.service;
 
 import com.mini3.backend.domain.ats.dto.AtsAnalysisDto;
 import com.mini3.backend.domain.ats.dto.AtsApplicantDto;
+import com.mini3.backend.domain.ats.dto.AtsHrDashboardDto;
 import com.mini3.backend.domain.ats.dto.AtsSubmitDto;
 import com.mini3.backend.domain.ats.entity.Applicant;
 import com.mini3.backend.domain.ats.entity.Resume;
-import com.mini3.backend.domain.ats.entity.ResumeAnalysis;
-import com.mini3.backend.domain.ats.enums.AnalysisStatus;
 import com.mini3.backend.domain.ats.enums.ResumeSource;
 import com.mini3.backend.domain.ats.repository.ApplicantRepository;
 import com.mini3.backend.domain.ats.repository.ResumeAnalysisRepository;
 import com.mini3.backend.domain.ats.repository.ResumeRepository;
-import com.mini3.backend.global.storage.AtsS3StorageService;
+import com.mini3.backend.domain.ats.analysis.AtsResumeAnalysisService;
+import com.mini3.backend.domain.ats.storage.AtsS3StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.exception.SdkException;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -32,6 +31,8 @@ public class AtsService {
     private final ResumeRepository resumeRepository;
     private final ResumeAnalysisRepository resumeAnalysisRepository;
     private final AtsS3StorageService atsS3StorageService;
+    private final AtsHrDashboardService atsHrDashboardService;
+    private final AtsResumeAnalysisService atsResumeAnalysisService;
 
     /**
      * 공개 지원: 인적사항 + 파일 1건 저장. 원본 파일은 S3에 업로드한다.
@@ -79,6 +80,11 @@ public class AtsService {
                 .toList();
     }
 
+    /** HR 대시보드 테이블: 지원자 + 최신 이력서·분석 요약 한 행 */
+    public List<AtsHrDashboardDto.ApplicantRow> getHrDashboardApplicantRows() {
+        return atsHrDashboardService.listApplicantRows();
+    }
+
     public AtsApplicantDto.Detail getApplicantDetail(Long applicantId) {
         Applicant applicant = applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new EntityNotFoundException("지원자를 찾을 수 없습니다."));
@@ -106,28 +112,10 @@ public class AtsService {
     }
 
     /**
-     * 최근 제출 이력서 기준 AI 분석. Gemini 연동 전에는 스텁 결과를 저장한다.
+     * 최근 제출 이력서 기준 AI 분석. 구현은 {@link AtsResumeAnalysisService}에 위임한다.
      */
     @Transactional
     public AtsAnalysisDto.AnalyzeResult analyzeApplicantResume(Long applicantId) {
-        applicantRepository.findById(applicantId)
-                .orElseThrow(() -> new EntityNotFoundException("지원자를 찾을 수 없습니다."));
-        Resume resume = resumeRepository.findFirstByApplicant_ApplicantIdOrderByCreatedAtDesc(applicantId)
-                .orElseThrow(() -> new EntityNotFoundException("제출된 이력서가 없습니다."));
-
-        ResumeAnalysis analysis = ResumeAnalysis.builder()
-                .resume(resume)
-                .status(AnalysisStatus.COMPLETED)
-                .model("stub")
-                .summary("Gemini API 연동 후 자동 분석됩니다.")
-                .resultJson("{\"decision\":\"REVIEW\",\"overallScore\":0}")
-                .analyzedAt(LocalDateTime.now())
-                .build();
-        resumeAnalysisRepository.save(analysis);
-
-        return AtsAnalysisDto.AnalyzeResult.builder()
-                .message("분석이 완료되었습니다.")
-                .analysis(AtsAnalysisDto.Analysis.from(analysis))
-                .build();
+        return atsResumeAnalysisService.analyzeApplicantResume(applicantId);
     }
 }

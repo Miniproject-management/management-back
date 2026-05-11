@@ -17,6 +17,10 @@ configurations {
     }
 }
 
+springBoot {
+    mainClass = 'com.mini3.backend.Mini3BackApplication'
+}
+
 repositories {
     mavenCentral()
 }
@@ -43,6 +47,9 @@ dependencies {
 
     // .env 파일 읽기
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // ATS: S3 PDF → 텍스트 추출 (CI/배포 빌드와 동일)
+    implementation 'org.apache.pdfbox:pdfbox:2.0.31'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'

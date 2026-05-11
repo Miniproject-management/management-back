@@ -34,7 +34,7 @@ public class DashboardService {
     public UserDashboardResponse getUserDashboard(Long empNo) {
         int year = LocalDate.now().getYear();
 
-        LeaveBalance balance = leaveBalanceRepository.findByEmployee_EmpNoAndYear(empNo, year)
+        LeaveBalance balance = leaveBalanceRepository.findDetailByEmployeeAndYear(empNo, year)
                 .orElse(null);
 
         UserDashboardResponse.LeaveBalanceSummary balanceSummary = balance != null
