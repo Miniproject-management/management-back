@@ -1,12 +1,17 @@
-FROM python:3.10
+FROM gradle:8.5-jdk17 AS builder
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
 COPY . .
 
-EXPOSE 8000
+RUN gradle clean build -x test
 
-CMD ["python", "main.py"]
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
