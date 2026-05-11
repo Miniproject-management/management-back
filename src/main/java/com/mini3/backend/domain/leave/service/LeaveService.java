@@ -105,7 +105,7 @@ public class LeaveService {
     @Transactional
     public LeaveRequest approve(Long leaveId, Long approverEmpNo) {
 
-        LeaveRequest request = leaveRequestRepository.findById(leaveId)
+        LeaveRequest request = leaveRequestRepository.findDetailById(leaveId)
                 .orElseThrow(() -> new IllegalArgumentException("휴가 신청을 찾을 수 없습니다."));
 
         Employee approver = employeeRepository.findById(approverEmpNo)
@@ -150,7 +150,7 @@ public class LeaveService {
     @Transactional
     public LeaveRequest reject(Long leaveId, Long approverEmpNo) {
 
-        LeaveRequest request = leaveRequestRepository.findById(leaveId)
+        LeaveRequest request = leaveRequestRepository.findDetailById(leaveId)
                 .orElseThrow(() -> new IllegalArgumentException("휴가 신청을 찾을 수 없습니다."));
 
         Employee approver = employeeRepository.findById(approverEmpNo)
@@ -189,7 +189,7 @@ public class LeaveService {
     @Transactional
     public LeaveRequest cancel(Long leaveId, Long empNo) {
 
-        LeaveRequest request = leaveRequestRepository.findById(leaveId)
+        LeaveRequest request = leaveRequestRepository.findDetailById(leaveId)
                 .orElseThrow(() -> new IllegalArgumentException("휴가 신청을 찾을 수 없습니다."));
 
         if (!request.getEmployee().getEmpNo().equals(empNo)) {
