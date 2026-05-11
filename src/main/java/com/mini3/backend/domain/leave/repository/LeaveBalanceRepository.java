@@ -10,7 +10,18 @@ import java.util.Optional;
 
 public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long> {
 
-    Optional<LeaveBalance> findByEmployee_EmpNoAndYear(Long empNo, Integer year);
+    @Query("""
+        SELECT lb
+        FROM LeaveBalance lb
+        JOIN FETCH lb.employee e
+        JOIN FETCH e.department
+        WHERE e.empNo = :empNo
+        AND lb.year = :year
+        """)
+    Optional<LeaveBalance> findDetailByEmployeeAndYear(
+            @Param("empNo") Long empNo,
+            @Param("year") Integer year
+    );
 
     List<LeaveBalance> findByYear(Integer year);
 
