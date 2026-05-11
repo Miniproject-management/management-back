@@ -16,9 +16,6 @@ import com.mini3.backend.domain.employee.repository.EmployeeRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import com.mini3.backend.domain.employee.enums.Position;
 
 @Service
 @RequiredArgsConstructor
