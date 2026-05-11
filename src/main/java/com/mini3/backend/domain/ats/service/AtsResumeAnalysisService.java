@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 
 /**
  * 이력서 AI 분석: S3 키로 연결된 {@link Resume}에 대해 {@link ResumeAnalysis}를 생성·저장한다.
- * Google GenAI 연동 시 {@link com.mini3.backend.global.storage.AtsS3StorageService#getObjectBytes(String)} 로
+ * Google GenAI 연동 시 {@link com.mini3.backend.domain.ats.storage.AtsS3StorageService#getObjectBytes(String)} 로
  * 원본을 읽어 모델에 넘기면 된다.
  */
 @Service

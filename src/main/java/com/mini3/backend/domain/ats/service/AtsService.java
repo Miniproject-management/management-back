@@ -10,7 +10,7 @@ import com.mini3.backend.domain.ats.enums.ResumeSource;
 import com.mini3.backend.domain.ats.repository.ApplicantRepository;
 import com.mini3.backend.domain.ats.repository.ResumeAnalysisRepository;
 import com.mini3.backend.domain.ats.repository.ResumeRepository;
-import com.mini3.backend.global.storage.AtsS3StorageService;
+import com.mini3.backend.domain.ats.storage.AtsS3StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

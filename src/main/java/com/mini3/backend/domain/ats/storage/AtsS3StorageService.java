@@ -1,4 +1,4 @@
-package com.mini3.backend.global.storage;
+package com.mini3.backend.domain.ats.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +14,9 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+/**
+ * ATS 이력서 파일의 S3 업로드·조회. PDF 로드 후 분석까지의 흐름은 ats 서비스 계층에서 이 클래스를 사용한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class AtsS3StorageService {
@@ -57,7 +60,7 @@ public class AtsS3StorageService {
     }
 
     /**
-     * S3 객체 전체 바이트를 읽는다. Gemini 등 이력서 분석 파이프라인에서 사용한다.
+     * S3 객체 전체 바이트를 읽는다. PDF 등 이력서 분석 파이프라인에서 사용한다.
      */
     public byte[] getObjectBytes(String objectKey) {
         GetObjectRequest request = GetObjectRequest.builder()
