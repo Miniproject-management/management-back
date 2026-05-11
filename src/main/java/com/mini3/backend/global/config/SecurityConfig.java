@@ -1,5 +1,6 @@
 package com.mini3.backend.global.config;
 
+import org.springframework.http.HttpMethod;
 import com.mini3.backend.global.security.custom.CustomUserDetailsService;
 import com.mini3.backend.global.security.jwt.*;
 import lombok.RequiredArgsConstructor;
@@ -45,17 +46,22 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
 
+                .cors(cors -> {})
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/health",
                                 "/api/public/**",
                                 "/api/hr/applicants/**"
                         ).permitAll()
+
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

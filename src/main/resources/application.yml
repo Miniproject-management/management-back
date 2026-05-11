@@ -29,4 +29,4 @@ cloud:
   aws:
     region: ap-northeast-2 #수정 필요
     s3:
-      bucket: ${S3_BUCKET_NAME:awslab2026-bucket-test}
+      bucket: miniproject-management-dev-files-804540872991
