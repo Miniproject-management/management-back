@@ -1,4 +1,4 @@
-package com.mini3.analyzer;
+package com.mini3.backend.domain.ats;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
