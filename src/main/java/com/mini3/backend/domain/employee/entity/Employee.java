@@ -24,7 +24,7 @@ public class Employee {
     @Column(name = "emp_name", nullable = false, length = 100)
     private String empName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "dept_no", nullable = false)
     private Department department;
 

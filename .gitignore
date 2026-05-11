@@ -20,6 +20,7 @@ bin/
 ### Environment ###
 .env
 
+
 ### 작업일지 ###
 docs/김민희_작업일지.md
 docs/김민희_보안점검표.md

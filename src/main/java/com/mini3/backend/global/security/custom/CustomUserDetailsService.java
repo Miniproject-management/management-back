@@ -7,9 +7,11 @@ import com.mini3.backend.domain.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final EmployeeRepository employeeRepository;
@@ -18,7 +20,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String empNo)
             throws UsernameNotFoundException {
 
-        Employee employee = employeeRepository.findById(Long.parseLong(empNo))
+        Employee employee = employeeRepository
+                .findByEmpNoWithDepartment(Long.parseLong(empNo))
                 .orElseThrow(() -> new UsernameNotFoundException("사용자 없음"));
 
         Role role = getRole(employee);
@@ -29,11 +32,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     private Role getRole(Employee employee) {
 
         // 인사팀이면 무조건 관리자
-        if (employee.getDepartment().getDeptName().equals("인사팀")) {
+        // if (employee.getDepartment().getDeptName().equals("인사팀")) {
+        //     return Role.ROLE_ADMIN;
+        // }
+        if (employee.getPosition() == Position.관리자) {
             return Role.ROLE_ADMIN;
         }
 
-        // 일반 부서 팀장
+        // 일반 부서 팀장ㅇ
         if (employee.getPosition() == Position.팀장) {
             return Role.ROLE_MANAGER;
         }
