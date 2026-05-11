@@ -11,11 +11,9 @@ import com.mini3.backend.domain.ats.enums.ResumeSource;
 import com.mini3.backend.domain.ats.repository.ApplicantRepository;
 import com.mini3.backend.domain.ats.repository.ResumeAnalysisRepository;
 import com.mini3.backend.domain.ats.repository.ResumeRepository;
+import com.mini3.backend.global.storage.AtsS3StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +30,10 @@ public class AtsService {
     private final ApplicantRepository applicantRepository;
     private final ResumeRepository resumeRepository;
     private final ResumeAnalysisRepository resumeAnalysisRepository;
+    private final AtsS3StorageService atsS3StorageService;
 
     /**
-     * 공개 지원: 인적사항 + 파일 1건 저장. S3 업로드는 추후 연동 시 storageKey 등 확장.
+     * 공개 지원: 인적사항 + 파일 1건 저장. 원본 파일은 S3에 업로드한다.
      */
     @Transactional
     public AtsSubmitDto.SubmitResponse submitApplication(AtsSubmitDto.SubmitRequest request, MultipartFile file) {
@@ -50,13 +48,20 @@ public class AtsService {
                 .build();
         applicantRepository.save(applicant);
 
-        String content = resolveUploadedText(file);
+        String s3Key;
+        try {
+            s3Key = atsS3StorageService.uploadApplicantResume(file, applicant.getApplicantId());
+        } catch (IOException e) {
+            throw new IllegalStateException("파일을 S3에 업로드하지 못했습니다.", e);
+        }
+
         Resume resume = Resume.builder()
                 .applicant(applicant)
                 .title(null)
-                .content(content)
+                .content(null)
                 .source(ResumeSource.UPLOAD)
                 .originalFileName(file.getOriginalFilename())
+                .s3ObjectKey(s3Key)
                 .build();
         resumeRepository.save(resume);
 
@@ -90,7 +95,7 @@ public class AtsService {
                             .resumeTitle(resume.getTitle())
                             .source(resume.getSource() != null ? resume.getSource().name() : null)
                             .originalFileName(resume.getOriginalFileName())
-                            .storageKey(null);
+                            .storageKey(resume.getS3ObjectKey());
 
                     resumeAnalysisRepository.findFirstByResume_ResumeIdOrderByAnalyzedAtDesc(resume.getResumeId())
                             .ifPresent(analysis -> builder.analysis(AtsAnalysisDto.Analysis.from(analysis)));
@@ -123,23 +128,5 @@ public class AtsService {
                 .message("분석이 완료되었습니다.")
                 .analysis(AtsAnalysisDto.Analysis.from(analysis))
                 .build();
-    }
-
-    private static String resolveUploadedText(MultipartFile file) {
-        String original = file.getOriginalFilename();
-        if (original != null && original.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
-            try {
-                try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
-                    PDFTextStripper stripper = new PDFTextStripper();
-                    String text = stripper.getText(doc);
-                    if (text != null && !text.isBlank()) {
-                        return text;
-                    }
-                }
-            } catch (IOException ignored) {
-                // fall through to placeholder
-            }
-        }
-        return "[업로드 파일] " + (original != null ? original : "첨부");
     }
 }
