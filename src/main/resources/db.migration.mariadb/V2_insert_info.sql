@@ -5,8 +5,6 @@ INSERT INTO departments (
     dept_name,
     dept_desc
 ) VALUES
-('인사팀', '인사 및 조직 관리'),
-('개발팀', '서비스 개발 및 운영'),
 ('디자인팀', 'UI/UX 디자인');
 
 
