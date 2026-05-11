@@ -64,7 +64,7 @@ public class LeaveService {
         int year = dto.getStartDate().getYear();
 
         LeaveBalance balance =
-                leaveBalanceRepository.findByEmployee_EmpNoAndYear(dto.getEmpNo(), year)
+                leaveBalanceRepository.findDetailByEmployeeAndYear(dto.getEmpNo(), year)
                         .orElseThrow(() -> new IllegalArgumentException("연차 정보가 없습니다."));
 
         // 잔여 연차 검증
@@ -294,7 +294,7 @@ public class LeaveService {
         int year = request.getStartDate().getYear();
 
         LeaveBalance balance =
-                leaveBalanceRepository.findByEmployee_EmpNoAndYear(
+                leaveBalanceRepository.findDetailByEmployeeAndYear(
                                 request.getEmployee().getEmpNo(),
                                 year
                         )

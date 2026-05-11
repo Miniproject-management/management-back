@@ -54,7 +54,7 @@ class LeaveBalanceServiceTest {
         dto.setTotalLeave(new BigDecimal("15.00"));
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-        given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026)).willReturn(Optional.empty());
+        given(leaveBalanceRepository.findDetailByEmployeeAndYear(1L, 2026)).willReturn(Optional.empty());
         given(leaveBalanceRepository.save(any(LeaveBalance.class))).willAnswer(i -> i.getArgument(0));
 
         LeaveBalance result = leaveBalanceService.createOrUpdate(dto);
@@ -80,7 +80,7 @@ class LeaveBalanceServiceTest {
         dto.setTotalLeave(new BigDecimal("20.00"));
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-        given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026)).willReturn(Optional.of(existing));
+        given(leaveBalanceRepository.findDetailByEmployeeAndYear(1L, 2026)).willReturn(Optional.of(existing));
         given(leaveBalanceRepository.save(any(LeaveBalance.class))).willAnswer(i -> i.getArgument(0));
 
         LeaveBalance result = leaveBalanceService.createOrUpdate(dto);
@@ -92,7 +92,7 @@ class LeaveBalanceServiceTest {
     @Test
     @DisplayName("연차 조회 - 없으면 에러")
     void getBalance_notFound() {
-        given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(999L, 2026)).willReturn(Optional.empty());
+        given(leaveBalanceRepository.findDetailByEmployeeAndYear(999L, 2026)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> leaveBalanceService.getBalance(999L, 2026))
                 .isInstanceOf(IllegalArgumentException.class)
