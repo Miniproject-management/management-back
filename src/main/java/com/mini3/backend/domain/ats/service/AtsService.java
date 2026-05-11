@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -51,7 +52,7 @@ public class AtsService {
         String s3Key;
         try {
             s3Key = atsS3StorageService.uploadApplicantResume(file, applicant.getApplicantId());
-        } catch (IOException e) {
+        } catch (IOException | SdkException e) {
             throw new IllegalStateException("파일을 S3에 업로드하지 못했습니다.", e);
         }
 

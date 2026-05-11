@@ -13,7 +13,7 @@ on:
 #   ECR_BACKEND_URI            terraform output -raw ecr_backend_repository_url
 #   EKS_CLUSTER_NAME           terraform output -raw eks_cluster_name
 #   BACKEND_SA_ROLE_ARN        terraform output -raw backend_sa_role_arn
-#   S3_BUCKET_NAME             terraform output -raw s3_bucket_name
+#   S3_BUCKET_NAME             (필수) S3 버킷 이름 — deploy 시 manifests에 주입됨
 # ──────────────────────────────────────────────────────────────────────────
 
 env:
@@ -88,10 +88,17 @@ jobs:
       - name: Update Manifest
         env:
           ECR_IMAGE: ${{ secrets.ECR_BACKEND_URI }}:${{ github.sha }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         run: |
           cd infra-repo
+          if [ -z "${S3_BUCKET_NAME}" ]; then
+            echo "GitHub Repository secret S3_BUCKET_NAME 이 비어 있습니다. 설정 후 다시 실행하세요."
+            exit 1
+          fi
           # infra/manifests/backend/deployment.yaml 내의 image: 부분을 새 이미지 태그로 변경
           sed -i "s|image: .*|image: ${ECR_IMAGE}|g" manifests/backend/deployment.yaml
+          # S3 버킷명은 Kubernetes가 해석하지 않으므로, CI에서 시크릿 값으로 한 줄 덮어쓰기
+          sed -i "s|^  S3_BUCKET_NAME:.*|  S3_BUCKET_NAME: \"${S3_BUCKET_NAME}\"|" manifests/backend/deployment.yaml
       - name: Commit and Push Changes
         run: |
           cd infra-repo
