@@ -25,7 +25,7 @@ public class LeaveBalanceService {
                 .orElseThrow(() -> new IllegalArgumentException("사원을 찾을 수 없습니다."));
 
         LeaveBalance balance = leaveBalanceRepository
-                .findByEmployee_EmpNoAndYear(dto.getEmpNo(), dto.getYear())
+                .findDetailByEmployeeAndYear(dto.getEmpNo(), dto.getYear())
                 .orElse(LeaveBalance.builder()
                         .employee(employee)
                         .year(dto.getYear())
@@ -37,7 +37,7 @@ public class LeaveBalanceService {
     }
 
     public LeaveBalance getBalance(Long empNo, Integer year) {
-        return leaveBalanceRepository.findByEmployee_EmpNoAndYear(empNo, year)
+        return leaveBalanceRepository.findDetailByEmployeeAndYear(empNo, year)
                 .orElseThrow(() -> new IllegalArgumentException("연차 정보가 없습니다."));
     }
 }
