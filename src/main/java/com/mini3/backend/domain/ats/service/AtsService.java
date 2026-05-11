@@ -59,7 +59,7 @@ public class AtsService {
         Resume resume = Resume.builder()
                 .applicant(applicant)
                 .title(null)
-                .content(null)
+                .content("")
                 .source(ResumeSource.UPLOAD)
                 .originalFileName(file.getOriginalFilename())
                 .s3ObjectKey(s3Key)
