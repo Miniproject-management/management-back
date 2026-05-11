@@ -189,6 +189,8 @@ public class LeaveService {
     @Transactional
     public LeaveRequest cancel(Long leaveId, Long empNo) {
 
+        System.out.println("===== NEW CANCEL CODE =====");
+
         LeaveRequest request = leaveRequestRepository.findDetailById(leaveId)
                 .orElseThrow(() -> new IllegalArgumentException("휴가 신청을 찾을 수 없습니다."));
 
