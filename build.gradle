@@ -17,6 +17,10 @@ configurations {
     }
 }
 
+springBoot {
+    mainClass = 'com.mini3.backend.Mini3BackApplication'
+}
+
 repositories {
     mavenCentral()
 }
