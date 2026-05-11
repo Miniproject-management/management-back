@@ -100,7 +100,7 @@ class LeaveSecurityTest {
             given(employeeRepository.findById(1L))
                     .willReturn(Optional.of(employee));
 
-            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026))
+            given(leaveBalanceRepository.findDetailByEmployeeAndYear(1L, 2026))
                     .willReturn(Optional.of(balance));
 
             given(leaveRequestRepository.findOverlapping(eq(1L), any(), any()))
@@ -131,7 +131,7 @@ class LeaveSecurityTest {
             given(employeeRepository.findById(1L))
                     .willReturn(Optional.of(employee));
 
-            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026))
+            given(leaveBalanceRepository.findDetailByEmployeeAndYear(1L, 2026))
                     .willReturn(Optional.of(balance));
 
             given(leaveRequestRepository.findOverlapping(eq(1L), any(), any()))
@@ -272,7 +272,7 @@ class LeaveSecurityTest {
             given(employeeRepository.findById(1L))
                     .willReturn(Optional.of(employee));
 
-            given(leaveBalanceRepository.findByEmployee_EmpNoAndYear(1L, 2026))
+            given(leaveBalanceRepository.findDetailByEmployeeAndYear(1L, 2026))
                     .willReturn(Optional.of(balance));
 
             assertThatThrownBy(() -> leaveService.applyLeave(dto))
