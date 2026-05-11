@@ -184,7 +184,7 @@ public class LeaveService {
                 .orElseThrow(() -> new IllegalArgumentException("승인자를 찾을 수 없습니다."));
 
         Position position = approver.getPosition();
-
+        
         if (position == null) {
             return List.of();
         }

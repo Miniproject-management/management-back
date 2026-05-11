@@ -21,7 +21,7 @@ public class EmployeeResponse {
                 .empName(employee.getEmpName())
                 .deptName(employee.getDepartment().getDeptName()) // 부서 엔티티에서 이름만 추출
                 .jobTitle(employee.getJobTitle())
-                .position(employee.getPosition().name())
+                .position(employee.getPosition() != null ? employee.getPosition().name() : null)
                 .hireDate(employee.getHireDate())
                 .build();
     }

@@ -9,14 +9,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.*;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @RequiredArgsConstructor
@@ -47,34 +43,36 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http)
             throws Exception {
 
-       http
-        .csrf(csrf -> csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
 
-        .cors(cors -> {})
+                .cors(cors -> {})
 
-        .sessionManagement(session ->
-                session.sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
 
-        .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> auth
 
-                .requestMatchers(
-                        "/api/auth/login",
-                        "/health"
-                ).permitAll()
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/health",
+                                "/api/public/**",
+                                "/api/hr/applicants/**"
+                        ).permitAll()
 
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                .anyRequest().authenticated()
-        )
+                        .anyRequest().authenticated()
+                )
 
-        .addFilterBefore(
-                new JwtAuthenticationFilter(
-                        jwtProvider,
-                        customUserDetailsService
-                ),
-                UsernamePasswordAuthenticationFilter.class
-        );
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(
+                                jwtProvider,
+                                customUserDetailsService
+                        ),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }
