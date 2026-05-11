@@ -40,6 +40,10 @@ public class ResumeAnalysis {
     @Column(name = "result_json", columnDefinition = "TEXT") // 결과 JSON
     private String resultJson;
 
+    /** HR 대시보드·정렬용 총점 (0~100 등). 세부 항목은 {@link #resultJson} */
+    @Column(name = "overall_score")
+    private Integer overallScore;
+
     @Column(name = "failure_message", length = 2000) // 실패 메시지
     private String failureMessage;
 
