@@ -11,7 +11,6 @@ import java.time.LocalDate;
 @Setter
 public class LeaveRequestDto {
 
-    @NotNull(message = "사원 번호는 필수입니다.")
     private Long empNo;
 
     @NotBlank(message = "휴가 유형은 필수입니다.")
