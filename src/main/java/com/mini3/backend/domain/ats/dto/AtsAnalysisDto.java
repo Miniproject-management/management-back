@@ -23,6 +23,7 @@ public final class AtsAnalysisDto {
         private String model; // 모델 이름
         private String summary; // 요약
         private String resultJson; // 결과 JSON
+        private Integer overallScore; // 총점
         private String failureMessage; // 실패 메시지
         private LocalDateTime analyzedAt; // 분석 일시
 
@@ -36,6 +37,7 @@ public final class AtsAnalysisDto {
                     .model(entity.getModel())
                     .summary(entity.getSummary())
                     .resultJson(entity.getResultJson())
+                    .overallScore(entity.getOverallScore())
                     .failureMessage(entity.getFailureMessage())
                     .analyzedAt(entity.getAnalyzedAt())
                     .build();
