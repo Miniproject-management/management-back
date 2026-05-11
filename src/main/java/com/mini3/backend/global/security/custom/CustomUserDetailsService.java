@@ -35,6 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // if (employee.getDepartment().getDeptName().equals("인사팀")) {
         //     return Role.ROLE_ADMIN;
         // }
+        //
         if (employee.getPosition() == Position.관리자) {
             return Role.ROLE_ADMIN;
         }
