@@ -52,7 +52,7 @@ public class LeaveService {
                 calculateBusinessDays(dto.getStartDate(), dto.getEndDate(), dto.getLeaveType());
 
         // 클라이언트 requestDays 검증
-        BigDecimal clientRequestDays = new BigDecimal(dto.getRequestDays());
+        BigDecimal clientRequestDays = dto.getRequestDays();
 
         if (clientRequestDays.compareTo(serverCalculatedDays) != 0) {
             throw new IllegalArgumentException(
@@ -113,10 +113,25 @@ public class LeaveService {
 
         if (request.getLeaveStatus() == LeaveStatus.PENDING_MANAGER) {
 
+            // 권한 검사
+            if (approver.getPosition() != Position.팀장) {
+                throw new IllegalArgumentException("팀장만 승인 가능합니다.");
+            }
+
+            if (!approver.getDepartment().getDeptNo()
+                    .equals(request.getEmployee().getDepartment().getDeptNo())) {
+
+                throw new IllegalArgumentException("같은 부서만 승인 가능합니다.");
+            }
+
             request.setLeaveStatus(LeaveStatus.PENDING_HR);
             request.setApprovedBy(approver);
 
         } else if (request.getLeaveStatus() == LeaveStatus.PENDING_HR) {
+
+            if (approver.getPosition() != Position.관리자) {
+                throw new IllegalArgumentException("관리자만 승인 가능합니다.");
+            }
 
             request.setLeaveStatus(LeaveStatus.APPROVED);
             request.setApprovedBy(approver);
@@ -141,6 +156,30 @@ public class LeaveService {
         Employee approver = employeeRepository.findById(approverEmpNo)
                 .orElseThrow(() -> new IllegalArgumentException("승인자를 찾을 수 없습니다."));
 
+        if (request.getLeaveStatus() == LeaveStatus.PENDING_MANAGER) {
+
+            if (approver.getPosition() != Position.팀장) {
+                throw new IllegalArgumentException("팀장만 반려 가능합니다.");
+            }
+
+            if (!approver.getDepartment().getDeptNo()
+                    .equals(request.getEmployee().getDepartment().getDeptNo())) {
+
+                throw new IllegalArgumentException("같은 부서만 반려 가능합니다.");
+            }
+
+        } else if (request.getLeaveStatus() == LeaveStatus.PENDING_HR) {
+
+            if (approver.getPosition() != Position.관리자) {
+                throw new IllegalArgumentException("관리자만 반려 가능합니다.");
+            }
+
+        } else {
+
+            throw new IllegalArgumentException(
+                    "반려할 수 없는 상태입니다: " + request.getLeaveStatus()
+            );
+        }
         request.setLeaveStatus(LeaveStatus.REJECTED);
         request.setApprovedBy(approver);
 

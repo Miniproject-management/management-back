@@ -94,7 +94,7 @@ class LeaveSecurityTest {
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
             dto.setEndDate(LocalDate.of(2026, 7, 1));
-            dto.setRequestDays(1);
+            dto.setRequestDays(new BigDecimal("1"));
             dto.setReason("<script>alert('해킹')</script>");
 
             given(employeeRepository.findById(1L))
@@ -125,7 +125,7 @@ class LeaveSecurityTest {
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 2));
             dto.setEndDate(LocalDate.of(2026, 7, 2));
-            dto.setRequestDays(1);
+            dto.setRequestDays(new BigDecimal("1"));
             dto.setReason("<img src=x onerror=alert('hack')>");
 
             given(employeeRepository.findById(1L))
@@ -222,7 +222,7 @@ class LeaveSecurityTest {
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 10));
             dto.setEndDate(LocalDate.of(2026, 7, 5));
-            dto.setRequestDays(1);
+            dto.setRequestDays(new BigDecimal("1"));
             dto.setReason("테스트");
 
             given(employeeRepository.findById(1L))
@@ -243,7 +243,7 @@ class LeaveSecurityTest {
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
             dto.setEndDate(LocalDate.of(2026, 8, 15));
-            dto.setRequestDays(30);
+            dto.setRequestDays(new BigDecimal("30"));
             dto.setReason("장기 휴가");
 
             given(employeeRepository.findById(1L))
@@ -266,7 +266,7 @@ class LeaveSecurityTest {
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
             dto.setEndDate(LocalDate.of(2026, 7, 2));
-            dto.setRequestDays(2);
+            dto.setRequestDays(new BigDecimal("2"));
             dto.setReason("여행");
 
             given(employeeRepository.findById(1L))
@@ -290,7 +290,7 @@ class LeaveSecurityTest {
             dto.setLeaveType("연차");
             dto.setStartDate(LocalDate.of(2026, 7, 1));
             dto.setEndDate(LocalDate.of(2026, 7, 1));
-            dto.setRequestDays(1);
+            dto.setRequestDays(new BigDecimal("1"));
 
             given(employeeRepository.findById(9999L))
                     .willReturn(Optional.empty());
