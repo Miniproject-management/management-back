@@ -67,7 +67,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     @Query("""
         SELECT lr
         FROM LeaveRequest lr
-        JOIN FETCH lr.employee
+        JOIN FETCH lr.employee e
+        JOIN FETCH e.department
         WHERE lr.leaveId = :leaveId
         """)
         Optional<LeaveRequest> findDetailById(
