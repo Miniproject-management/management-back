@@ -2,17 +2,19 @@ package com.mini3.backend.global.config;
 
 import org.springframework.http.HttpMethod;
 import com.mini3.backend.global.security.custom.CustomUserDetailsService;
-import com.mini3.backend.global.security.jwt.*;
+import com.mini3.backend.global.security.jwt.JwtAuthenticationFilter;
+import com.mini3.backend.global.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder; // NoOp 추가
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.*;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -23,16 +25,15 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
     /**
-     * [보안 설정] 비밀번호 암호화 방식 결정
-     * 기본적으로 BCryptPasswordEncoder를 사용하여 안전하게 해싱합니다.
+     * 비밀번호 암호화 방식 설정
+     * 운영 환경에서는 BCrypt 사용
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // 실제 운영 및 보안 점검 시 사용 (암호화 적용)
         return new BCryptPasswordEncoder();
-        
-        // 비상시/테스트용: 비밀번호를 평문으로 확인해야 할 때만 위를 주석처리하고 아래를 사용하세요.
-        // return NoOpPasswordEncoder.getInstance(); 
+
+        // 테스트용 (평문 비교 필요할 때만 사용)
+        // return NoOpPasswordEncoder.getInstance();
     }
 
     @Bean
