@@ -56,9 +56,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/health",
-                                "/api/public/**",
-                                "/api/hr/applicants/**"
+                                "/api/public/**"
                         ).permitAll()
+                        // ATS 지원자·분석: 로그인한 회원 전체 (JWT 유효 시)
+                        .requestMatchers("/api/hr/applicants/**")
+                        .authenticated()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
