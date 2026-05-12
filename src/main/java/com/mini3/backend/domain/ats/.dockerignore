@@ -1,5 +1,0 @@
-**/*.java
-.git
-__pycache__
-*.pyc
-.venv
