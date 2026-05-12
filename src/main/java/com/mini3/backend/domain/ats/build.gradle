@@ -17,6 +17,14 @@ repositories {
     mavenCentral()
 }
 
+bootJar {
+    enabled = true
+}
+
+jar {
+    enabled = false
+}
+
 springBoot {
     mainClass = 'com.mini3.backend.domain.ats.DocumentAnalyzerApplication'
 }
