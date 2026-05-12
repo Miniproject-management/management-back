@@ -11,7 +11,7 @@ public class JwtSecurityTest {
                 new BCryptPasswordEncoder();
 
         System.out.println(
-                encoder.encode("1234")
+                encoder.encode("password123")
         );
     }
     
