@@ -36,3 +36,10 @@ cloud:
     region: ap-northeast-2 #수정 필요
     s3:
       bucket: miniproject-management-dev-files-804540872991
+
+# ATS 전용 서버(document-analyzer) 주소. 백엔드가 /api/hr/applicants·/api/public/applications 요청을 여기로 그대로 넘김(프록시).
+# Postman 은 예전처럼 백엔드 URL만 쓰면 됨. 클러스터 밖에서 끄려면 DOCUMENT_ANALYZER_PROXY_ENABLED=false
+integration:
+  document-analyzer:
+    enabled: ${DOCUMENT_ANALYZER_PROXY_ENABLED:true}
+    base-url: ${DOCUMENT_ANALYZER_BASE_URL:http://document-analyzer-service:8080}

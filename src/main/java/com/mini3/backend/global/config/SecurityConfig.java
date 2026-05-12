@@ -56,9 +56,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/health",
-                                "/api/public/**",
-                                "/api/hr/applicants/**"
+                                "/api/public/**"
                         ).permitAll()
+                        // ATS 지원자·분석: 로그인한 관리자·팀장만 (일반 직원 제외)
+                        .requestMatchers("/api/hr/applicants/**")
+                        .hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
