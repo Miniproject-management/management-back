@@ -31,7 +31,7 @@ public class AtsGeminiResumeAnalysisClient {
     @Value("${spring.ai.google.genai.api-key:}")
     private String apiKey;
 
-    @Value("${app.gemini.model:gemini-1.5-flash}")
+    @Value("${app.gemini.model:gemini-2.5-flash}")
     private String modelId;
 
     public AtsGeminiResumeAnalysisClient(ObjectMapper objectMapper) {

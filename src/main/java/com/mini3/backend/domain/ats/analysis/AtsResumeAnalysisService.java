@@ -39,7 +39,7 @@ public class AtsResumeAnalysisService {
     private final AtsGeminiResumeAnalysisClient atsGeminiResumeAnalysisClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${app.gemini.model:gemini-1.5-flash}")
+    @Value("${app.gemini.model:gemini-2.5-flash}")
     private String geminiModelId;
 
     @Transactional
