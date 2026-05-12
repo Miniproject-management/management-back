@@ -13,6 +13,7 @@ public class LeaveRequestResponse {
     private Long leaveId;
     private Long empNo;
     private String empName;
+    private String deptName; 
     private String leaveType;
     private BigDecimal leaveDays;
     private String startDate;
@@ -21,10 +22,18 @@ public class LeaveRequestResponse {
     private String leaveStatus;
 
     public static LeaveRequestResponse from(LeaveRequest request) {
+
         return LeaveRequestResponse.builder()
                 .leaveId(request.getLeaveId())
                 .empNo(request.getEmployee().getEmpNo())
                 .empName(request.getEmployee().getEmpName())
+
+                .deptName(
+                        request.getEmployee()
+                                .getDepartment()
+                                .getDeptName()
+                )
+
                 .leaveType(request.getLeaveType())
                 .leaveDays(request.getLeaveDays())
                 .startDate(request.getStartDate().toString())
