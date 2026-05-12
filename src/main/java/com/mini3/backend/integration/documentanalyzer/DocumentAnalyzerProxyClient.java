@@ -123,6 +123,8 @@ public class DocumentAnalyzerProxyClient {
                 .replace("\n", " ")
                 .replace("\r", " ");
     }
+
+    private static HttpHeaders copyRequestHeaders(HttpServletRequest request) {
         HttpHeaders out = new HttpHeaders();
         Enumeration<String> names = request.getHeaderNames();
         if (names == null) {
