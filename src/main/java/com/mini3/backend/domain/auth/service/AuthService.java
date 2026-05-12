@@ -37,6 +37,13 @@ public class AuthService {
                 .accessToken(token)
                 .empNo(userDetails.getEmployee().getEmpNo())
                 .empName(userDetails.getEmployee().getEmpName())
+
+                .deptName(
+                        userDetails.getEmployee()
+                                .getDepartment()
+                                .getDeptName()
+                )
+
                 .role(userDetails.getRole().name())
                 .build();
     }
