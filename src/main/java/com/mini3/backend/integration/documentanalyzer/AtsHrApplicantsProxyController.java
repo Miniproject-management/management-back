@@ -41,6 +41,14 @@ public class AtsHrApplicantsProxyController {
         return proxyClient.forward(request, null);
     }
 
+    @GetMapping("/{applicantId}/resume/file")
+    public ResponseEntity<byte[]> resumeFile(
+            @PathVariable Long applicantId,
+            HttpServletRequest request
+    ) {
+        return proxyClient.forward(request, null);
+    }
+
     @GetMapping("/{applicantId}")
     public ResponseEntity<byte[]> detail(
             @PathVariable Long applicantId,
