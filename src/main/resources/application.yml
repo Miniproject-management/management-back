@@ -42,4 +42,6 @@ cloud:
 integration:
   document-analyzer:
     enabled: ${DOCUMENT_ANALYZER_PROXY_ENABLED:true}
-    base-url: ${DOCUMENT_ANALYZER_BASE_URL:http://document-analyzer-service:8080}
+    base-url: ${DOCUMENT_ANALYZER_BASE_URL:http://document-analyzer-service.miniproject-management.svc.cluster.local:8080}
+    connect-timeout-ms: ${DOCUMENT_ANALYZER_CONNECT_TIMEOUT_MS:10000}
+    read-timeout-ms: ${DOCUMENT_ANALYZER_READ_TIMEOUT_MS:180000}

@@ -58,9 +58,9 @@ public class SecurityConfig {
                                 "/health",
                                 "/api/public/**"
                         ).permitAll()
-                        // ATS 지원자·분석: 로그인한 관리자·팀장만 (일반 직원 제외)
+                        // ATS 지원자·분석: 로그인한 회원 전체 (JWT 유효 시)
                         .requestMatchers("/api/hr/applicants/**")
-                        .hasAnyRole("ADMIN", "MANAGER")
+                        .authenticated()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -10,10 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -49,9 +53,12 @@ public class DocumentAnalyzerProxyClient {
             return ResponseEntity.status(e.getStatusCode())
                     .headers(filterResponseHeaders(e.getResponseHeaders()))
                     .body(e.getResponseBodyAsByteArray());
+        } catch (ResourceAccessException e) {
+            log.error("document-analyzer 연결/읽기 타임아웃 url={}", url, e);
+            return upstreamUnavailable("document-analyzer 에 연결하지 못했습니다. 서비스·DNS·방화벽을 확인하세요.", e.getMessage());
         } catch (Exception e) {
             log.error("document-analyzer 프록시 실패 url={}", url, e);
-            throw e;
+            return upstreamUnavailable("document-analyzer 프록시 중 오류가 발생했습니다.", e.getMessage());
         }
     }
 
@@ -89,10 +96,33 @@ public class DocumentAnalyzerProxyClient {
             return ResponseEntity.status(e.getStatusCode())
                     .headers(filterResponseHeaders(e.getResponseHeaders()))
                     .body(e.getResponseBodyAsByteArray());
+        } catch (ResourceAccessException e) {
+            log.error("document-analyzer 연결/읽기 타임아웃 url={}", url, e);
+            return upstreamUnavailable("document-analyzer 에 연결하지 못했습니다.", e.getMessage());
+        } catch (Exception e) {
+            log.error("document-analyzer 프록시 실패 url={}", url, e);
+            return upstreamUnavailable("document-analyzer 프록시 중 오류가 발생했습니다.", e.getMessage());
         }
     }
 
-    private static HttpHeaders copyRequestHeaders(HttpServletRequest request) {
+    private static ResponseEntity<byte[]> upstreamUnavailable(String message, String detail) {
+        String safe = escapeJson(detail);
+        String json = "{\"error\":\"" + escapeJson(message) + "\",\"detail\":\"" + safe + "\"}";
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String escapeJson(String s) {
+        if (s == null) {
+            return "";
+        }
+        String t = s.length() > 300 ? s.substring(0, 300) : s;
+        return t.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", " ")
+                .replace("\r", " ");
+    }
         HttpHeaders out = new HttpHeaders();
         Enumeration<String> names = request.getHeaderNames();
         if (names == null) {
