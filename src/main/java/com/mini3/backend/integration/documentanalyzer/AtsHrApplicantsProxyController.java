@@ -3,6 +3,8 @@ package com.mini3.backend.integration.documentanalyzer;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +24,7 @@ import java.io.IOException;
 public class AtsHrApplicantsProxyController {
 
     private final DocumentAnalyzerProxyClient proxyClient;
+    private final ManagementResumePdfService managementResumePdfService;
 
     @GetMapping
     public ResponseEntity<byte[]> list(HttpServletRequest request) {
@@ -46,7 +49,11 @@ public class AtsHrApplicantsProxyController {
             @PathVariable Long applicantId,
             HttpServletRequest request
     ) {
-        return proxyClient.forward(request, null);
+        byte[] pdf = managementResumePdfService.loadPdfBytes(applicantId, request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"resume.pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     @GetMapping("/{applicantId}")
