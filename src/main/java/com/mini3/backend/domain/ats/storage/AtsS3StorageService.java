@@ -1,4 +1,4 @@
-package com.mini3.backend.global.storage;
+package com.mini3.backend.domain.ats.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -13,6 +14,9 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+/**
+ * ATS 이력서 파일의 S3 업로드·조회. PDF 로드 후 분석까지의 흐름은 ats 서비스 계층에서 이 클래스를 사용한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class AtsS3StorageService {
@@ -53,6 +57,21 @@ public class AtsS3StorageService {
         }
 
         return key;
+    }
+
+    /**
+     * S3 객체 전체 바이트를 읽는다. PDF 등 이력서 분석 파이프라인에서 사용한다.
+     */
+    public byte[] getObjectBytes(String objectKey) {
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .build();
+        try (var response = s3Client.getObject(request)) {
+            return response.readAllBytes();
+        } catch (IOException e) {
+            throw new IllegalStateException("S3 객체를 읽지 못했습니다.", e);
+        }
     }
 
     private static String sanitizeFileName(String name) {
