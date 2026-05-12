@@ -12,5 +12,6 @@ public class LoginResponseDto {
     private String accessToken;
     private Long empNo;
     private String empName;
+    private String deptName; 
     private String role;
 }
