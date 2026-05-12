@@ -2,7 +2,7 @@ name: Backend → EKS Deploy
 
 on:
   push:
-    branches: ["feature/ats2"]
+    branches: ["main","develop"]
   workflow_dispatch:
 
 # ──────────────────────────────────────────────────────────────────────────
