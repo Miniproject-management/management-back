@@ -55,7 +55,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/login",
-                                "/health",
+                                "/api/health",
                                 "/api/public/**"
                         ).permitAll()
                         // ATS 지원자·분석: 로그인한 회원 전체 (JWT 유효 시)
