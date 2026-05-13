@@ -1,5 +1,6 @@
 package com.mini3.backend.integration.documentanalyzer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,9 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -47,8 +50,8 @@ public class ManagementResumePdfService {
     private String bucket;
 
     /**
-     * S3 객체 바이트 스트림. 호출부는 {@link org.springframework.core.io.InputStreamResource} 등으로
-     * HTTP 응답에 붙이고, 전송 종료 시 스트림이 닫히게 하면 된다.
+     * S3 객체 바이트 스트림. 호출부는 {@link org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody}
+     * 등으로 HTTP 응답에 붙이고, 전송 종료 시 스트림이 닫히게 하면 된다.
      */
     public ResponseInputStream<GetObjectResponse> openResumePdfStream(
             long applicantId,
@@ -93,6 +96,26 @@ public class ManagementResumePdfService {
                     "지원자 상세 조회에 실패했습니다.",
                     e
             );
+        } catch (ResourceAccessException e) {
+            log.warn(
+                    "document-analyzer 연결 실패 applicantId={} url={} — {}",
+                    applicantId,
+                    detailUrl,
+                    e.toString()
+            );
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "document-analyzer에 연결하지 못했습니다. "
+                            + "서비스가 내려갔거나 DNS·방화벽·DOCUMENT_ANALYZER_BASE_URL 설정을 확인하세요.",
+                    e
+            );
+        } catch (JsonProcessingException e) {
+            log.warn("지원자 상세 JSON 파싱 실패 applicantId={}", applicantId, e);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "지원자 상세 응답이 올바른 JSON이 아닙니다. document-analyzer 로그를 확인하세요.",
+                    e
+            );
         } catch (Exception e) {
             log.error("이력서 PDF 로드 실패 applicantId={}", applicantId, e);
             throw new ResponseStatusException(
@@ -120,6 +143,13 @@ public class ManagementResumePdfService {
         } catch (SdkServiceException e) {
             log.error("S3 SDK 오류 bucket={} key={}", bucket, objectKey, e);
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "S3 연결 오류가 발생했습니다.", e);
+        } catch (SdkClientException e) {
+            log.warn("S3 SDK 클라이언트 오류 bucket={} key={} msg={}", bucket, objectKey, e.getMessage(), e);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "S3에서 파일을 읽는 중 오류가 발생했습니다: " + e.getMessage(),
+                    e
+            );
         }
     }
 
