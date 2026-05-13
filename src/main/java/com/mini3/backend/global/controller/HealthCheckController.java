@@ -5,10 +5,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
-@RequestMapping("/api")
 public class HealthCheckController {
 
-    @GetMapping("/health")
+    @GetMapping("/api/health")
     public String healthcheck() {
         return "ok";
     }
