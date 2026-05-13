@@ -17,9 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.util.Enumeration;
@@ -28,6 +30,7 @@ import java.util.List;
 /**
  * 이력서 PDF는 document-analyzer 의 /resume/file 프록시에서 403 이 나는 환경이 있어,
  * 이미 동작하는 상세 API로 storageKey 만 받은 뒤 백엔드(IRSA)에서 S3 GetObject 로 직접 제공한다.
+ * 대용량 PDF 는 메모리(OOM)·ALB 타임아웃을 피하기 위해 바이트 배열이 아니라 S3 스트림으로 넘긴다.
  */
 @Slf4j
 @Service
@@ -43,7 +46,14 @@ public class ManagementResumePdfService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public byte[] loadPdfBytes(long applicantId, HttpServletRequest incomingRequest) {
+    /**
+     * S3 객체 바이트 스트림. 호출부는 {@link org.springframework.core.io.InputStreamResource} 등으로
+     * HTTP 응답에 붙이고, 전송 종료 시 스트림이 닫히게 하면 된다.
+     */
+    public ResponseInputStream<GetObjectResponse> openResumePdfStream(
+            long applicantId,
+            HttpServletRequest incomingRequest
+    ) {
         String base = properties.getBaseUrl().replaceAll("/$", "");
         String detailUrl = base + "/api/hr/applicants/" + applicantId;
 
@@ -68,7 +78,7 @@ public class ManagementResumePdfService {
             if (key == null || key.isBlank()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "제출된 이력서(S3 키)가 없습니다.");
             }
-            return fetchFromS3(key.strip());
+            return openS3ObjectStream(key.strip());
         } catch (ResponseStatusException e) {
             throw e;
         } catch (HttpStatusCodeException e) {
@@ -93,13 +103,13 @@ public class ManagementResumePdfService {
         }
     }
 
-    private byte[] fetchFromS3(String objectKey) {
+    private ResponseInputStream<GetObjectResponse> openS3ObjectStream(String objectKey) {
         GetObjectRequest req = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
                 .build();
         try {
-            return s3Client.getObjectAsBytes(req).asByteArray();
+            return s3Client.getObject(req);
         } catch (S3Exception e) {
             log.warn("S3 GetObject 거부/실패 bucket={} key={} status={}", bucket, objectKey, e.statusCode(), e);
             throw new ResponseStatusException(
