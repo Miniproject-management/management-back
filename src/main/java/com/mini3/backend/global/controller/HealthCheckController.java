@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @CrossOrigin(origins = "*")
 public class HealthCheckController {
 
-    @GetMapping("/health")
+    @GetMapping("/api/health")
     public String healthcheck() {
         return "ok";
     }
