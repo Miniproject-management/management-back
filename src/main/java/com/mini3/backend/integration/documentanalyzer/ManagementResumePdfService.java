@@ -1,5 +1,6 @@
 package com.mini3.backend.integration.documentanalyzer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,11 +16,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.util.Enumeration;
@@ -28,6 +33,7 @@ import java.util.List;
 /**
  * 이력서 PDF는 document-analyzer 의 /resume/file 프록시에서 403 이 나는 환경이 있어,
  * 이미 동작하는 상세 API로 storageKey 만 받은 뒤 백엔드(IRSA)에서 S3 GetObject 로 직접 제공한다.
+ * 대용량 PDF 는 메모리(OOM)·ALB 타임아웃을 피하기 위해 바이트 배열이 아니라 S3 스트림으로 넘긴다.
  */
 @Slf4j
 @Service
@@ -43,7 +49,14 @@ public class ManagementResumePdfService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public byte[] loadPdfBytes(long applicantId, HttpServletRequest incomingRequest) {
+    /**
+     * S3 객체 바이트 스트림. 호출부는 {@link org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody}
+     * 등으로 HTTP 응답에 붙이고, 전송 종료 시 스트림이 닫히게 하면 된다.
+     */
+    public ResponseInputStream<GetObjectResponse> openResumePdfStream(
+            long applicantId,
+            HttpServletRequest incomingRequest
+    ) {
         String base = properties.getBaseUrl().replaceAll("/$", "");
         String detailUrl = base + "/api/hr/applicants/" + applicantId;
 
@@ -68,7 +81,7 @@ public class ManagementResumePdfService {
             if (key == null || key.isBlank()) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "제출된 이력서(S3 키)가 없습니다.");
             }
-            return fetchFromS3(key.strip());
+            return openS3ObjectStream(key.strip());
         } catch (ResponseStatusException e) {
             throw e;
         } catch (HttpStatusCodeException e) {
@@ -83,6 +96,26 @@ public class ManagementResumePdfService {
                     "지원자 상세 조회에 실패했습니다.",
                     e
             );
+        } catch (ResourceAccessException e) {
+            log.warn(
+                    "document-analyzer 연결 실패 applicantId={} url={} — {}",
+                    applicantId,
+                    detailUrl,
+                    e.toString()
+            );
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "document-analyzer에 연결하지 못했습니다. "
+                            + "서비스가 내려갔거나 DNS·방화벽·DOCUMENT_ANALYZER_BASE_URL 설정을 확인하세요.",
+                    e
+            );
+        } catch (JsonProcessingException e) {
+            log.warn("지원자 상세 JSON 파싱 실패 applicantId={}", applicantId, e);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "지원자 상세 응답이 올바른 JSON이 아닙니다. document-analyzer 로그를 확인하세요.",
+                    e
+            );
         } catch (Exception e) {
             log.error("이력서 PDF 로드 실패 applicantId={}", applicantId, e);
             throw new ResponseStatusException(
@@ -93,13 +126,13 @@ public class ManagementResumePdfService {
         }
     }
 
-    private byte[] fetchFromS3(String objectKey) {
+    private ResponseInputStream<GetObjectResponse> openS3ObjectStream(String objectKey) {
         GetObjectRequest req = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
                 .build();
         try {
-            return s3Client.getObjectAsBytes(req).asByteArray();
+            return s3Client.getObject(req);
         } catch (S3Exception e) {
             log.warn("S3 GetObject 거부/실패 bucket={} key={} status={}", bucket, objectKey, e.statusCode(), e);
             throw new ResponseStatusException(
@@ -110,6 +143,13 @@ public class ManagementResumePdfService {
         } catch (SdkServiceException e) {
             log.error("S3 SDK 오류 bucket={} key={}", bucket, objectKey, e);
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "S3 연결 오류가 발생했습니다.", e);
+        } catch (SdkClientException e) {
+            log.warn("S3 SDK 클라이언트 오류 bucket={} key={} msg={}", bucket, objectKey, e.getMessage(), e);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "S3에서 파일을 읽는 중 오류가 발생했습니다: " + e.getMessage(),
+                    e
+            );
         }
     }
 

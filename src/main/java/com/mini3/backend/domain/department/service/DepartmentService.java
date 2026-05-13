@@ -5,6 +5,8 @@ import com.mini3.backend.domain.department.dto.DepartmentResponse;
 import com.mini3.backend.domain.department.entity.Department;
 import com.mini3.backend.domain.department.repository.DepartmentRepository;
 import com.mini3.backend.domain.employee.repository.EmployeeRepository;
+import com.mini3.backend.domain.employee.entity.Employee;
+import com.mini3.backend.domain.employee.enums.Position;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,12 @@ public class DepartmentService {
         return departmentRepository.findAll().stream()
                 .map(dept -> {
                     long count = employeeRepository.findByDepartmentDeptNo(dept.getDeptNo()).size();
-                    return DepartmentResponse.from(dept, count);
+                    String leaderName = employeeRepository.findByDepartment_DeptNoAndPosition(dept.getDeptNo(), Position.팀장)
+                            .stream()
+                            .findFirst()
+                            .map(Employee::getEmpName)
+                            .orElse("-");
+                    return DepartmentResponse.from(dept, count, leaderName);
                 })
                 .collect(Collectors.toList());
     }
@@ -34,7 +41,12 @@ public class DepartmentService {
         Department department = departmentRepository.findById(deptNo)
                 .orElseThrow(() -> new EntityNotFoundException("해당 부서를 찾을 수 없습니다. ID: " + deptNo));
         long count = employeeRepository.findByDepartmentDeptNo(deptNo).size();
-        return DepartmentResponse.from(department, count);
+        String leaderName = employeeRepository.findByDepartment_DeptNoAndPosition(deptNo, Position.팀장)
+                .stream()
+                .findFirst()
+                .map(Employee::getEmpName)
+                .orElse("-");
+        return DepartmentResponse.from(department, count, leaderName);
     }
 
     @Transactional
@@ -49,7 +61,7 @@ public class DepartmentService {
                 .build();
 
         Department saved = departmentRepository.save(department);
-        return DepartmentResponse.from(saved, 0L);
+        return DepartmentResponse.from(saved, 0L, "-");
     }
 
     @Transactional
