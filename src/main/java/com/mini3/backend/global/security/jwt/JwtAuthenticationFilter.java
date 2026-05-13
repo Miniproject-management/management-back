@@ -13,39 +13,58 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter
+        extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
-    private final CustomUserDetailsService userDetailsService;
+    private final CustomUserDetailsService
+            userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         // 로그인 요청은 JWT 검사 안 함
         String path = request.getRequestURI();
 
         if (path.equals("/api/auth/login")) {
-            filterChain.doFilter(request, response);
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
 
-        String bearer = request.getHeader("Authorization");
+        String bearer =
+                request.getHeader(
+                        "Authorization"
+                );
 
-        if (bearer != null && bearer.startsWith("Bearer ")) {
+        if (bearer != null &&
+                bearer.startsWith("Bearer ")) {
 
-            String token = bearer.substring(7);
+            String token =
+                    bearer.substring(7);
 
+            // JWT 검증
             if (jwtProvider.validateToken(token)) {
 
-                Claims claims = jwtProvider.getClaims(token);
+                Claims claims =
+                        jwtProvider.getClaims(token);
 
-                String empNo = claims.getSubject();
+                String empNo =
+                        claims.getSubject();
 
                 UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(empNo);
+                        userDetailsService
+                                .loadUserByUsername(
+                                        empNo
+                                );
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
@@ -54,11 +73,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
-                SecurityContextHolder.getContext()
+                SecurityContextHolder
+                        .getContext()
                         .setAuthentication(auth);
+
+            } else {
+
+                System.out.println(
+                        "JWT 검증 실패"
+                );
             }
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
 }
