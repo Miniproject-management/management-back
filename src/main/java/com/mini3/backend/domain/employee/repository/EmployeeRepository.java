@@ -8,12 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.mini3.backend.domain.employee.entity.Employee;
+import com.mini3.backend.domain.employee.enums.Position;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findByDepartmentDeptNo(Long deptNo);
 
     List<Employee> findByDepartment_DeptNo(Long deptNo);
+
+    List<Employee> findByDepartment_DeptNoAndPosition(Long deptNo, Position position);
 
     List<Employee> findByEmpNameContaining(String empName);
 
