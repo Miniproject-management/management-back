@@ -6,7 +6,7 @@ spring:
     name: mini-3-back
 
   datasource:
-    url: jdbc:mysql://miniproject-management-yhj-mysql-2team.crwisa8imi16.ap-southeast-2.rds.amazonaws.com/mydb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://miniproject-management-yhj-mysql-2team.crwisa8imi16.ap-southeast-2.rds.amazonaws.com:3306/mydb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:admin}
     driver-class-name: org.mariadb.jdbc.Driver
