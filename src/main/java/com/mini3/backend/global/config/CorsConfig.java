@@ -17,7 +17,7 @@ public class CorsConfig {
 
                 registry.addMapping("/**")
                         .allowedOrigins(
-                                "http://k8s-miniproj-appingre-81c01d55c9-1855530779.ap-northeast-2.elb.amazonaws.com"
+                                "http://k8s-miniproj-appingre-81c01d55c9-1855530779.ap-southeast-2.elb.amazonaws.com"
                         )
                         .allowedMethods("*")
                         .allowedHeaders("*")

@@ -6,7 +6,7 @@ spring:
     name: mini-3-back
 
   datasource:
-    url: jdbc:mysql://miniproject-management-mysql-2team.c3owgi2swfvk.ap-northeast-2.rds.amazonaws.com:3306/mydb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://miniproject-management-yhj-mysql-2team.crwisa8imi16.ap-southeast-2.rds.amazonaws.com/mydb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:admin}
     driver-class-name: org.mariadb.jdbc.Driver
@@ -33,9 +33,9 @@ app:
 
 cloud:
   aws:
-    region: ap-northeast-2 #수정 필요
+    region: ap-southeast-2 #수정 필요
     s3:
-      bucket: miniproject-management-dev-files-804540872991
+      bucket: miniproject-management-yhj-dev-files-804540872991
 
 # ATS 전용 서버(document-analyzer) 주소. 백엔드가 /api/hr/applicants·/api/public/applications 요청을 여기로 그대로 넘김(프록시).
 # Postman 은 예전처럼 백엔드 URL만 쓰면 됨. 클러스터 밖에서 끄려면 DOCUMENT_ANALYZER_PROXY_ENABLED=false
